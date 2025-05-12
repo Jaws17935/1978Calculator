@@ -1,0 +1,2786 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品銷售總表</title>
+    <style>
+        :root {
+            --primary-color: #00ffcc;
+            --spacing-lg: 1rem;
+            --spacing-xl: 2rem;
+            --background-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: var(--background-gradient);
+            color: var(--primary-color);
+            font-family: 'Arial', sans-serif;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+        }
+
+        .title-container {
+            position: relative;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.7),
+                        0 0 20px rgba(0, 255, 204, 0.5),
+                        0 0 30px rgba(0, 255, 204, 0.3);
+            cursor: pointer;
+            display: inline-block;
+            padding: var(--spacing-lg) var(--spacing-xl);
+            color: var(--primary-color);
+            transition: all 0.3s ease;
+            position: relative;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        h1:hover {
+            text-shadow: 0 0 15px rgba(0, 255, 204, 0.9),
+                        0 0 25px rgba(0, 255, 204, 0.7),
+                        0 0 35px rgba(0, 255, 204, 0.5);
+            transform: scale(1.05);
+        }
+
+        h1::before,
+        h1::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 3px;
+            background: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        h1::before {
+            top: 0;
+            left: 0;
+        }
+
+        h1::after {
+            bottom: 0;
+            right: 0;
+        }
+
+        h1:hover::before,
+        h1:hover::after {
+            width: 100%;
+        }
+
+        .title-container::before {
+            display: none;
+        }
+
+        .table-container {
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            table-layout: fixed;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.9em;
+        }
+
+        th {
+            background: rgba(0, 255, 204, 0.1);
+            color: var(--primary-color);
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            font-size: 0.85em;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
+            background: rgba(0, 255, 204, 0.05);
+        }
+
+        tr:hover {
+            background: rgba(0, 255, 204, 0.1);
+        }
+
+        .action-buttons {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-buttons .left-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .action-buttons .right-settings {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        button {
+            padding: 8px 12px;
+            background: rgba(0, 255, 204, 0.1);
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85em;
+            min-width: 80px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        button:hover {
+            background: rgba(0, 255, 204, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+        }
+
+        .search-box {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 8px;
+            background: rgba(0, 255, 204, 0.1);
+            border: 1px solid var(--primary-color);
+            border-radius: 5px;
+            color: #ffffff;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            min-width: 40px;
+        }
+
+        .pagination button.active {
+            background: rgba(0, 255, 204, 0.3);
+        }
+
+        /* 修改設定面板樣式 */
+        .settings-panel {
+            display: none;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .setting-item input {
+            padding: 6px;
+            background: rgba(0, 255, 204, 0.1);
+            border: 1px solid var(--primary-color);
+            border-radius: 5px;
+            color: #ffffff;
+            width: 70px;
+            text-align: center;
+        }
+
+        .setting-item input::placeholder {
+            color: rgba(0, 255, 204, 0.7);
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        .setting-item input:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+        }
+
+        /* 移除數字輸入框的上下箭頭 */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0;
+        }
+
+        /* 新增編輯視窗樣式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: rgba(15, 12, 41, 0.98);
+            padding: 24px 20px 20px 20px;
+            border-radius: 15px;
+            border: 1px solid var(--primary-color);
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+            min-width: 320px;
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .modal-header {
+            /* 移除 flex 佈局，改為 block */
+            display: block;
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(0,255,204,0.3);
+            padding-bottom: 8px;
+            position: relative;
+        }
+        .modal-header h2 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.2em;
+            text-align: center;
+            width: 100%;
+        }
+        .modal-body {
+            color: #fff;
+            margin-bottom: 16px;
+            text-align: center;
+            flex: 1 1 auto;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .modal-footer button {
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+            min-width: 80px;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            background: rgba(0, 255, 204, 0.1);
+        }
+        .modal-footer button.cancel {
+            background: rgba(255, 51, 102, 0.1);
+            border: 1px solid #ff3366;
+            color: #ff3366;
+        }
+        .modal-footer button.cancel:hover {
+            background: rgba(255, 51, 102, 0.2);
+        }
+        .modal-footer button:hover {
+            background: rgba(0, 255, 204, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+        }
+
+        .weight-mode-select,
+        .weight-unit-select,
+        .price-unit-select,
+        .price-currency-select {
+            position: absolute;
+            width: 50px;
+            padding: 6px;
+            background: rgba(0, 255, 204, 0.1);
+            border: none;
+            color: #ffffff;
+            font-size: 0.9em;
+            text-align: center;
+            box-sizing: border-box;
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: none;
+            text-align-last: center;
+        }
+
+        /* 設置各列的寬度 */
+        th:nth-child(1), td:nth-child(1) { width: 15%; text-align: center; } /* 商品名稱 */
+        th:nth-child(2), td:nth-child(2) { width: 5%; text-align: center; }  /* 幣別 */
+        th:nth-child(3), td:nth-child(3) { width: 7%; text-align: center; }  /* 採購價格 */
+        th:nth-child(4), td:nth-child(4) { width: 7%; text-align: center; }  /* 採購數量 */
+        th:nth-child(5), td:nth-child(5) { width: 5%; text-align: center; }  /* 單重 */
+        th:nth-child(6), td:nth-child(6) { width: 5%; text-align: center; }  /* 總重 */
+        th:nth-child(7), td:nth-child(7) { width: 5%; text-align: center; }  /* 計材 */
+        th:nth-child(8), td:nth-child(8) { width: 7%; text-align: center; }  /* 內地運費 */
+        th:nth-child(9), td:nth-child(9) { width: 7%; text-align: center; }  /* 國際運費 */
+        th:nth-child(10), td:nth-child(10) { width: 5%; text-align: center; } /* 匯率 */
+        th:nth-child(11), td:nth-child(11) { width: 7%; text-align: center; } /* 平台抽成 */
+        th:nth-child(12), td:nth-child(12) { width: 7%; text-align: center; } /* 單價成本 */
+        th:nth-child(13), td:nth-child(13) { width: 7%; text-align: center; } /* 總成本 */
+        th:nth-child(14), td:nth-child(14) { width: 7%; text-align: center; } /* 建議定價 */
+        th:nth-child(15), td:nth-child(15) { width: 7%; text-align: center; } /* 實際定價 */
+        th:nth-child(16), td:nth-child(16) { width: 7%; text-align: center; } /* 定價損益 */
+
+        .product-name {
+            font-size: 0.9em;
+            text-align: center;
+            display: block;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #00ffcc !important; /* 添加 !important 確保基本顏色優先級 */
+        }
+
+        .product-name.selected {
+            color: #ff0000 !important; /* 添加 !important 確保選中狀態優先級 */
+        }
+
+        /* 添加复选框样式 */
+        .product-checkbox {
+            margin-right: 8px;
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            display: none;
+        }
+
+        .select-all-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding: 0 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .select-all-container label {
+            color: #00ffcc;
+            cursor: pointer;
+            user-select: none;
+            padding: 8px 0;
+        }
+
+        /* 移除全選框的樣式 */
+        .select-all-container input[type="checkbox"] {
+            display: none;
+        }
+
+        /* 修改確認刪除按鈕樣式 */
+        .confirm-delete-btn {
+            margin-left: 10px;
+            padding: 8px 12px;
+            font-size: 0.9em;
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        .confirm-delete-btn:hover {
+            background: rgba(255, 0, 0, 0.3);
+        }
+
+        .cancel-delete-btn {
+            padding: 8px 12px;
+            background: rgba(0, 255, 204, 0.1);
+            border-color: #00ffcc;
+            color: #00ffcc;
+        }
+
+        .cancel-delete-btn:hover {
+            background: rgba(0, 255, 204, 0.2);
+        }
+
+        .delete-mode .product-checkbox {
+            display: inline-block;
+        }
+
+        .product-checkbox {
+            display: none;
+            margin-right: 8px;
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+        }
+
+        /* 新增刪除模式按鈕樣式 */
+        #deleteModeToggle {
+            transition: all 0.3s ease;
+            border: 1px solid #ff0000;
+            color: #ff0000;
+            background: rgba(255, 0, 0, 0.1);
+            width: 100%;
+            text-align: left;
+            padding: 10px 15px;
+            border: none;
+            background: none;
+            color: #00ffcc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85em;
+            min-width: unset;
+            height: auto;
+            justify-content: flex-start;
+        }
+
+        #deleteModeToggle:hover {
+            background: rgba(0, 255, 204, 0.1);
+        }
+
+        #deleteModeToggle.active {
+            color: #ff0000;
+        }
+
+        #deleteModeToggle.active:hover {
+            background: rgba(255, 0, 0, 0.1);
+        }
+
+        /* 刪除模式下的表格樣式 */
+        .delete-mode .editable-cell {
+            cursor: default;
+        }
+
+        .delete-mode .editable-cell:hover {
+            background: none;
+        }
+
+        .delete-mode .product-name {
+            cursor: pointer;
+        }
+
+        .delete-mode .product-name:hover {
+            color: #ff0000 !important;
+            text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+        }
+
+        /* 添加单元格编辑样式 */
+        .editable-cell {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .editable-cell:hover {
+            background: rgba(0, 255, 204, 0.1);
+        }
+
+        .cell-edit-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 8px;
+            background: rgba(15, 12, 41, 0.95);
+            border: 1px solid #00ffcc;
+            color: #ffffff;
+            font-size: 0.9em;
+            box-sizing: border-box;
+            z-index: 1000;
+            text-align: center;
+        }
+
+        .cell-edit-input:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+        }
+
+        /* 移除數字輸入框的上下箭頭 */
+        .cell-edit-input[type="number"]::-webkit-inner-spin-button,
+        .cell-edit-input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0;
+        }
+
+        .cell-edit-input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        /* 批量作業按鈕樣式 */
+        .batch-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .batch-operation-btn {
+            background: rgba(0, 255, 204, 0.1);
+            border: 1px solid #00ffcc;
+            color: #00ffcc;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            min-width: 80px;
+            height: 36px;
+            font-size: 0.85em;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .batch-operation-btn:hover {
+            background: rgba(0, 255, 204, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+        }
+
+        /* 批量作業下拉選單樣式 */
+        .batch-dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(15, 12, 41, 0.95);
+            min-width: 150px;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            border-radius: 5px;
+            z-index: 1000;
+            margin-top: 5px;
+        }
+
+        .batch-dropdown-content.show {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-section {
+            padding: 5px 0;
+        }
+
+        .dropdown-header {
+            padding: 8px 15px;
+            color: rgba(0, 255, 204, 0.7);
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(0, 255, 204, 0.1);
+            margin: 5px 0;
+        }
+
+        .danger-button {
+            color: #ff3366 !important;
+        }
+
+        .danger-button:hover {
+            background: rgba(255, 51, 102, 0.1) !important;
+        }
+
+        .batch-dropdown-content button {
+            width: 100%;
+            text-align: left;
+            padding: 10px 15px;
+            border: none;
+            background: none;
+            color: #00ffcc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85em;
+            min-width: unset;
+            height: auto;
+            justify-content: flex-start;
+        }
+
+        .batch-dropdown-content button:hover {
+            background: rgba(0, 255, 204, 0.1);
+        }
+
+        .batch-dropdown-content button:not(:last-child) {
+            border-bottom: 1px solid rgba(0, 255, 204, 0.1);
+        }
+
+        /* 文件輸入框隱藏 */
+        #fileInput {
+            display: none;
+        }
+
+        /* 添加錯誤提示視窗樣式 */
+        .error-modal {
+            display: none;  /* 初始狀態為隱藏 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+        }
+
+        .error-modal.show {
+            display: flex;  /* 當添加 show 類時才顯示為 flex */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .error-modal-content {
+            position: relative;
+            background: rgba(15, 12, 41, 0.95);
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh; /* 設置最大高度為視窗高度的80% */
+            border-radius: 15px;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+            transform: translateY(0);
+            animation: modalFadeIn 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 0, 0, 0.3);
+            flex-shrink: 0; /* 防止header被壓縮 */
+            position: relative; /* 添加相對定位 */
+        }
+
+        .error-modal-header h2 {
+            color: #ff3366;
+            margin: 0;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: absolute; /* 絕對定位 */
+            left: 50%; /* 水平居中 */
+            transform: translateX(-50%); /* 水平居中偏移 */
+        }
+
+        .error-modal-body {
+            color: #ffffff;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            text-align: center;
+            overflow-y: auto; /* 添加垂直滾動 */
+            max-height: calc(80vh - 140px); /* 減去header和footer的高度 */
+            padding-right: 10px; /* 為滾動條預留空間 */
+        }
+
+        /* 自定義滾動條樣式 */
+        .error-modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .error-modal-body::-webkit-scrollbar-track {
+            background: rgba(255, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        .error-modal-body::-webkit-scrollbar-thumb {
+            background: rgba(255, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+
+        .error-modal-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 0, 0, 0.4);
+        }
+
+        .error-modal-footer {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: auto; /* 將footer推到底部 */
+            flex-shrink: 0; /* 防止footer被壓縮 */
+        }
+
+        .error-modal-button {
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+            min-width: 100px;
+        }
+
+        .error-modal-button.confirm {
+            background: rgba(255, 51, 102, 0.2);
+            border: 1px solid #ff3366;
+            color: #ff3366;
+        }
+
+        .error-modal-button.confirm:hover {
+            background: rgba(255, 51, 102, 0.3);
+        }
+
+        /* 添加排序圖標樣式 */
+        .sortable {
+            cursor: pointer;
+            position: relative;
+        }
+
+        /* 添加懸停效果 */
+        .sortable:hover {
+            background: rgba(0, 255, 204, 0.15);
+        }
+
+        /* 添加右側懸停選單樣式 */
+        .dropdown-item-with-submenu {
+            position: relative;
+        }
+
+        .submenu {
+            display: none;
+            position: absolute;
+            right: 100%;
+            top: 0;
+            background: rgba(15, 12, 41, 0.95);
+            min-width: 150px;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            border-radius: 5px;
+            z-index: 1001;
+        }
+
+        .dropdown-item-with-submenu:hover .submenu {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .submenu button {
+            width: 100%;
+            text-align: left;
+            padding: 10px 15px;
+            border: none;
+            background: none;
+            color: #00ffcc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85em;
+            min-width: unset;
+            height: auto;
+            justify-content: flex-start;
+        }
+
+        .submenu button:hover {
+            background: rgba(0, 255, 204, 0.1);
+        }
+
+        /* 優化密碼驗證視窗樣式 */
+        .password-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .password-modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        .password-modal-content {
+            background: rgba(15, 12, 41, 0.98);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 51, 102, 0.3);
+            box-shadow: 0 0 30px rgba(255, 51, 102, 0.3);
+            width: 90%;
+            max-width: 300px;
+            position: relative;
+            transform: translateY(0);
+            animation: contentSlideIn 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes contentSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .password-modal-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 51, 102, 0.3);
+            width: 100%;
+            position: relative;
+        }
+
+        .password-modal-header h2 {
+            color: #ff3366;
+            margin: 0;
+            font-size: 1.5em;
+            text-align: center;
+            width: 100%;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(255, 51, 102, 0.3);
+        }
+
+        .password-input {
+            width: 70%;
+            padding: 8px;
+            margin: 12px 0;
+            background: rgba(0, 255, 204, 0.05);
+            border: 2px solid rgba(0, 255, 204, 0.3);
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 0.9em;
+            text-align: center;
+            letter-spacing: 6px;
+            transition: all 0.3s ease;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .password-input::placeholder {
+            color: rgba(0, 255, 204, 0.5);
+            letter-spacing: normal;
+            font-size: 0.9em;
+        }
+
+        .password-modal-footer {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .password-modal-button {
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+            min-width: 80px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .password-modal-button.confirm {
+            background: rgba(255, 51, 102, 0.2);
+            border: 2px solid #ff3366;
+            color: #ff3366;
+        }
+
+        .password-modal-button.confirm:hover {
+            background: rgba(255, 51, 102, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 51, 102, 0.3);
+        }
+
+        .password-modal-button.cancel {
+            background: rgba(0, 255, 204, 0.1);
+            border: 2px solid #00ffcc;
+            color: #00ffcc;
+        }
+
+        .password-modal-button.cancel:hover {
+            background: rgba(0, 255, 204, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 204, 0.3);
+        }
+
+        /* 隱藏密碼欄位的眼睛圖示（顯示/隱藏密碼按鈕） */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-webkit-credentials-auto-fill-button,
+        input[type="password"]::-webkit-input-decoration,
+        input[type="password"]::-webkit-input-password-toggle-button {
+            display: none !important;
+        }
+
+        /* 新增 info modal 彈窗 HTML */
+        .info-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+        }
+
+        .info-modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .info-modal-content {
+            position: relative;
+            background: rgba(15, 12, 41, 0.95);
+            padding: 20px;
+            width: 90%;
+            max-width: 300px;
+            max-height: 80vh; /* 設置最大高度為視窗高度的80% */
+            border-radius: 15px;
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+            transform: translateY(0);
+            animation: modalFadeIn 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .info-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 255, 204, 0.3);
+            flex-shrink: 0; /* 防止header被壓縮 */
+            position: relative; /* 添加相對定位 */
+        }
+
+        .info-modal-header h2 {
+            color: #00ffcc;
+            margin: 0;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: absolute; /* 絕對定位 */
+            left: 50%; /* 水平居中 */
+            transform: translateX(-50%); /* 水平居中偏移 */
+        }
+
+        .info-modal-body {
+            color: #ffffff;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            text-align: center;
+            overflow-y: auto; /* 添加垂直滾動 */
+            max-height: calc(80vh - 140px); /* 減去header和footer的高度 */
+            padding-right: 10px; /* 為滾動條預留空間 */
+        }
+
+        /* 自定義滾動條樣式 */
+        .info-modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .info-modal-body::-webkit-scrollbar-track {
+            background: rgba(0, 255, 204, 0.1);
+            border-radius: 4px;
+        }
+
+        .info-modal-body::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 204, 0.3);
+            border-radius: 4px;
+        }
+
+        .info-modal-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 204, 0.4);
+        }
+
+        .info-modal-footer {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: auto; /* 將footer推到底部 */
+            flex-shrink: 0; /* 防止footer被壓縮 */
+        }
+
+        .info-modal-button {
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+            min-width: 100px;
+        }
+
+        .info-modal-button.confirm {
+            background: rgba(0, 255, 204, 0.2);
+            border: 1px solid #00ffcc;
+            color: #00ffcc;
+        }
+
+        .info-modal-button.confirm:hover {
+            background: rgba(0, 255, 204, 0.3);
+        }
+
+        /* 添加精簡模式相關樣式 */
+        .simplified-view .full-view {
+            display: none;
+        }
+
+        .simplified-view .right-settings {
+            display: none !important;
+        }
+
+        .simplified-view .table-container {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        .simplified-view th,
+        .simplified-view td {
+            white-space: nowrap;
+        }
+    </style>
+    <!-- 添加 Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- 添加 SheetJS 庫 -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="title-container">
+            <h1 onclick="returnToIndex()">商品銷售總表</h1>
+        </div>
+        
+        <div class="action-buttons">
+            <div class="left-buttons">
+                <button onclick="toggleViewMode()" id="viewModeToggle">精簡模式</button>
+            </div>
+            <div class="right-settings full-view">
+                <div class="setting-item">
+                    <input type="number" id="globalExchangeRate" step="0.01" min="0" value="4.5" onchange="updateSettings()" placeholder="匯率">
+                </div>
+                <div class="setting-item">
+                    <input type="number" id="globalInternationalShipping" step="0.1" min="0" value="35" onchange="updateSettings()" placeholder="國際運費">
+                </div>
+                <div class="setting-item">
+                    <input type="number" id="globalPlatformCommission" step="0.1" min="0" value="23.5" onchange="updateSettings()" placeholder="平台抽成">
+                </div>
+                <div class="batch-dropdown">
+                    <button type="button" class="batch-operation-btn" id="batchOperationBtn">
+                        資料處理
+                    </button>
+                    <div class="batch-dropdown-content" id="batchDropdown">
+                        <div class="dropdown-section">
+                            <div class="dropdown-item-with-submenu">
+                                <button type="button">還原備份</button>
+                                <div class="submenu">
+                                    <button type="button" onclick="exportBlankTemplate()">空白範本</button>
+                                    <button type="button" onclick="exportToExcel()">資料匯出</button>
+                                    <button type="button" onclick="document.getElementById('fileInput').click()">資料匯入</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item-with-submenu">
+                            <button type="button" class="danger-button">資料清除</button>
+                            <div class="submenu">
+                                <button type="button" onclick="toggleDeleteMode()">選擇刪除</button>
+                                <button type="button" onclick="clearAllData()" class="danger-button">全部刪除</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="搜尋" onkeyup="searchTable()">
+        </div>
+
+        <div class="select-all-container" style="display: none;" id="deleteOptions">
+            <label onclick="selectAll()">全選</label>
+            <button onclick="confirmDelete()" class="confirm-delete-btn">移除</button>
+            <button onclick="cancelDelete()" class="cancel-delete-btn">取消</button>
+        </div>
+
+        <div class="table-container">
+            <table id="productTable">
+                <thead>
+                    <tr>
+                        <th>商品名稱</th>
+                        <th>採購價格</th>
+                        <th class="full-view">採購數量</th>
+                        <th class="full-view">內地運費</th>
+                        <th class="full-view">單重</th>
+                        <th class="full-view">總重</th>
+                        <th class="full-view">計材</th>
+                        <th>單價成本</th>
+                        <th>總成本</th>
+                        <th>建議定價</th>
+                        <th>實際定價</th>
+                        <th>定價損益</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- 資料將由JavaScript動態填充 -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination" id="pagination">
+            <!-- 分頁按鈕將由JavaScript動態生成 -->
+        </div>
+    </div>
+
+    <!-- 統一 modal 結構：錯誤提示 -->
+    <div class="modal" id="errorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+            </div>
+            <div class="modal-body" id="errorModalBody">
+                <!-- 錯誤信息將在這裡顯示 -->
+            </div>
+            <div class="modal-footer">
+                <button class="confirm" onclick="closeModal('errorModal')">確定</button>
+            </div>
+        </div>
+    </div>
+    <!-- 統一 modal 結構：info -->
+    <div class="modal" id="infoModal">
+        <div class="modal-content" style="border: 1px solid var(--primary-color);">
+            <div class="modal-header">
+            </div>
+            <div class="modal-body" id="infoModalBody" style="color: #00ffcc; text-align: center; font-size: 1.1em;">資料匯入完成</div>
+            <div class="modal-footer">
+                <button class="confirm" style="border: 1px solid var(--primary-color); color: var(--primary-color); background: rgba(0,255,204,0.1);" onclick="closeModal('infoModal')">知道了</button>
+            </div>
+        </div>
+    </div>
+    <!-- 統一 modal 結構：密碼驗證 -->
+    <div class="modal" id="passwordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+            </div>
+            <div class="modal-body">
+                <input type="password" id="passwordInput" class="password-input" placeholder="請輸入密碼" maxlength="4" autocomplete="new-password">
+            </div>
+            <div class="modal-footer">
+                <button class="confirm" onclick="verifyPassword()">是的</button>
+                <button class="cancel" onclick="closeModal('passwordModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加文件輸入框 -->
+    <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="importFromExcel(event)">
+
+    <script>
+        // Firebase 配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyBdFAygUSaUaOGbhqsvkm6Q201yYbvEe5E",
+            authDomain: "computer-168.firebaseapp.com",
+            projectId: "computer-168",
+            storageBucket: "computer-168.firebasestorage.app",
+            messagingSenderId: "1008079543770",
+            appId: "1:1008079543770:web:c45802292e9684357ab4e3",
+            measurementId: "G-Z0SYWETVV9"
+        };
+
+        // 初始化 Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // 儲存商品資料的陣列
+        let products = [];
+        const itemsPerPage = 50;
+        let currentPage = 1;
+
+        // 新增設定相關變數
+        let settings = {
+            exchangeRate: 4.5,
+            internationalShipping: 35,
+            platformCommission: 23.5
+        };
+
+        let currentEditIndex = -1;
+
+        // 添加視圖模式狀態
+        let isFullView = true;
+
+        // 添加排序功能
+        let currentSort = {
+            column: null,
+            direction: 'asc'
+        };
+
+        // 修改表格標題的 HTML
+        function updateTableHeaders() {
+            // 精簡模式要顯示的欄位
+            const simpleFields = ['name','purchasePrice', 'singleCost', 'totalCost', 'suggestedPrice', 'actualPrice', 'profitLoss'];
+            const headers = [
+                { field: 'name', text: '商品名稱' },
+                { field: 'purchasePrice', text: '採購價格' },
+                { field: 'quantity', text: '採購數量' },
+                { field: 'inlandShipping', text: '內地運費' },
+                { field: 'singleWeight', text: '單重' },
+                { field: 'totalWeight', text: '總重' },
+                { field: 'materialCount', text: '計材' },
+                { field: 'singleCost', text: '單價成本' },
+                { field: 'totalCost', text: '總成本' },
+                { field: 'suggestedPrice', text: '建議定價' },
+                { field: 'actualPrice', text: '實際定價' },
+                { field: 'profitLoss', text: '定價損益' }
+            ];
+            const thead = document.querySelector('#productTable thead tr');
+            thead.innerHTML = headers.map(header => `
+                <th class="sortable${simpleFields.includes(header.field) ? '' : ' full-view'}" data-field="${header.field}">
+                    ${header.text}
+                </th>
+            `).join('');
+            // 添加排序事件監聽器
+            document.querySelectorAll('.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const field = th.dataset.field;
+                    sortTable(field);
+                });
+            });
+        }
+
+        // 排序函數
+        function sortTable(field) {
+            // 更新排序方向
+            if (currentSort.column === field) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = field;
+                currentSort.direction = 'asc';
+            }
+
+            // 更新排序圖標
+            document.querySelectorAll('.sortable').forEach(th => {
+                th.classList.remove('asc', 'desc');
+                if (th.dataset.field === field) {
+                    th.classList.add(currentSort.direction);
+                }
+            });
+
+            // 排序數據
+            products.sort((a, b) => {
+                let valueA = a[field];
+                let valueB = b[field];
+
+                // 處理特殊情況
+                if (field === 'name') {
+                    // 文字排序
+                    return currentSort.direction === 'asc' 
+                        ? valueA.localeCompare(valueB)
+                        : valueB.localeCompare(valueA);
+                } else {
+                    // 數值排序
+                    valueA = parseFloat(valueA) || 0;
+                    valueB = parseFloat(valueB) || 0;
+                    return currentSort.direction === 'asc' 
+                        ? valueA - valueB 
+                        : valueB - valueA;
+                }
+            });
+
+            // 重新初始化表格
+            initTable();
+        }
+
+        // 從 Firestore 載入數據
+        async function loadData() {
+            try {
+                // 初始化視圖模式按鈕文字
+                const toggleButton = document.getElementById('viewModeToggle');
+                toggleButton.textContent = isFullView ? '精簡模式' : '完整模式';
+                
+                // 載入設定
+                const settingsDoc = await db.collection('settings').doc('global').get();
+                if (settingsDoc.exists) {
+                    settings = settingsDoc.data();
+                    // 確保設定值被正確設置
+                    document.getElementById('globalExchangeRate').value = settings.exchangeRate || 4.5;
+                    document.getElementById('globalInternationalShipping').value = settings.internationalShipping || 35;
+                    document.getElementById('globalPlatformCommission').value = settings.platformCommission || 23.5;
+                }
+
+                // 載入商品
+                const productsSnapshot = await db.collection('products').orderBy('timestamp', 'desc').get();
+                products = productsSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                // 檢查 localStorage 中是否有更新後的數據
+                const updatedData = localStorage.getItem('updatedProductData');
+                if (updatedData) {
+                    try {
+                        const updatedProduct = JSON.parse(updatedData);
+                        const index = products.findIndex(p => p.id === updatedProduct.id);
+                        if (index !== -1) {
+                            // 更新本地數據
+                            products[index] = { ...products[index], ...updatedProduct };
+                            // 更新 Firestore
+                            await db.collection('products').doc(updatedProduct.id).update(updatedProduct);
+                        }
+                        // 清除 localStorage 中的數據
+                        localStorage.removeItem('updatedProductData');
+                    } catch (error) {
+                        console.error("Error processing updated product data:", error);
+                    }
+                }
+                
+                initTable();
+            } catch (error) {
+                console.error("Error loading data:", error);
+                alert("載入數據時發生錯誤");
+            }
+        }
+
+        // 更新設定
+        async function updateSettings(isFromMessage = false) {
+            try {
+                const exchangeRateInput = document.getElementById('globalExchangeRate');
+                const internationalShippingInput = document.getElementById('globalInternationalShipping');
+                const platformCommissionInput = document.getElementById('globalPlatformCommission');
+                
+                // 正確處理輸入值，允許 0 值
+                const newExchangeRate = exchangeRateInput.value === '' ? 4.5 : parseFloat(exchangeRateInput.value);
+                const newInternationalShipping = internationalShippingInput.value === '' ? 35 : parseFloat(internationalShippingInput.value);
+                const newPlatformCommission = platformCommissionInput.value === '' ? 23.5 : parseFloat(platformCommissionInput.value);
+                
+                // 檢查是否有實際變更
+                if (settings.exchangeRate === newExchangeRate && 
+                    settings.internationalShipping === newInternationalShipping &&
+                    settings.platformCommission === newPlatformCommission) {
+                    return; // 如果沒有變更，直接返回
+                }
+                
+                // 更新本地設定
+                settings.exchangeRate = newExchangeRate;
+                settings.internationalShipping = newInternationalShipping;
+                settings.platformCommission = newPlatformCommission;
+                
+                // 更新 Firestore 設定
+                await db.collection('settings').doc('global').set(settings);
+
+                // 如果不是來自消息的更新，則通知 index.html
+                if (!isFromMessage) {
+                    const indexWindow = window.opener;
+                    if (indexWindow && !indexWindow.closed) {
+                        indexWindow.postMessage({
+                            type: 'updateSettings',
+                            settings: settings
+                        }, '*');
+                    }
+                }
+
+                // 立即重新計算所有商品數據
+                for (let i = 0; i < products.length; i++) {
+                    const product = products[i];
+                    // 更新商品的設定值
+                    product.exchangeRate = settings.exchangeRate;
+                    product.internationalShipping = settings.internationalShipping;
+                    product.platformCommission = settings.platformCommission;
+                    // 重新計算商品數據
+                    recalculateProduct(product);
+                }
+                
+                // 更新表格顯示
+                initTable();
+                
+            } catch (error) {
+                console.error("Error updating settings:", error);
+                alert("更新設定時發生錯誤");
+            }
+        }
+
+        // 重新計算所有商品數據
+        async function recalculateAllProducts() {
+            try {
+                const batch = db.batch();
+                
+                for (const product of products) {
+                    let updatedData = {};
+                    
+                    if (product.currency === 'CNY') {
+                        // 計算總成本
+                        const totalProductCost = parseFloat(product.purchasePrice) * parseFloat(product.quantity);
+                        const costAfterExchange = (totalProductCost + (parseFloat(product.inlandShipping) || 0)) * settings.exchangeRate;
+                        const internationalShippingTotal = (parseFloat(product.totalWeight) * settings.internationalShipping) + 
+                            (parseInt(product.materialCount) > 6 ? (parseInt(product.materialCount) - 6) * 25 : 0);
+                        const totalCost = costAfterExchange + internationalShippingTotal;
+                        const singleCost = totalCost / parseFloat(product.quantity);
+
+                        // 計算建議定價和損益
+                        const suggestedPrice = singleCost / (1 - settings.platformCommission / 100);
+                        const profitLoss = product.actualPrice ? 
+                            (parseFloat(product.actualPrice) * (1 - settings.platformCommission / 100)) - singleCost : 0;
+
+                        // 更新商品數據
+                        updatedData = {
+                            exchangeRate: settings.exchangeRate,
+                            platformCommission: settings.platformCommission,
+                            internationalShipping: settings.internationalShipping,
+                            singleCost: singleCost.toFixed(2),
+                            totalCost: totalCost.toFixed(2),
+                            suggestedPrice: suggestedPrice.toFixed(2),
+                            profitLoss: profitLoss.toFixed(2)
+                        };
+                    } else {
+                        // 對於非 CNY 幣種，只更新平台抽成相關的計算
+                        const singleCost = parseFloat(product.singleCost);
+                        const suggestedPrice = singleCost / (1 - settings.platformCommission / 100);
+                        const profitLoss = product.actualPrice ? 
+                            (parseFloat(product.actualPrice) * (1 - settings.platformCommission / 100)) - singleCost : 0;
+
+                        updatedData = {
+                            platformCommission: settings.platformCommission,
+                            suggestedPrice: suggestedPrice.toFixed(2),
+                            profitLoss: profitLoss.toFixed(2)
+                        };
+                    }
+
+                    // 更新本地數據
+                    Object.assign(product, updatedData);
+
+                    // 更新 Firestore
+                    batch.update(db.collection('products').doc(product.id), updatedData);
+                }
+
+                // 提交所有更新
+                await batch.commit();
+                
+                // 重新初始化表格以顯示更新後的數據
+                initTable();
+            } catch (error) {
+                console.error("Error recalculating products:", error);
+                alert("重新計算商品數據時發生錯誤");
+            }
+        }
+
+        // 監聽來自 index.html 的設定更新
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'updateSettings') {
+                const newSettings = event.data.settings;
+                if (newSettings) {
+                    // 更新本地設定
+                    settings = newSettings;
+                    
+                    // 更新輸入框的值，確保 0 值也能正確顯示
+                    document.getElementById('globalExchangeRate').value = newSettings.exchangeRate;
+                    document.getElementById('globalInternationalShipping').value = newSettings.internationalShipping;
+                    document.getElementById('globalPlatformCommission').value = newSettings.platformCommission;
+                    
+                    // 更新 Firestore
+                    db.collection('settings').doc('global').set(newSettings)
+                        .then(() => {
+                            // 重新計算所有商品數據
+                            recalculateAllProducts();
+                        })
+                        .catch(error => {
+                            console.error("Error updating settings from message:", error);
+                        });
+                }
+            }
+        });
+
+        // 添加輸入框的變更事件監聽器
+        document.getElementById('globalExchangeRate').addEventListener('change', () => updateSettings());
+        document.getElementById('globalInternationalShipping').addEventListener('change', () => updateSettings());
+        document.getElementById('globalPlatformCommission').addEventListener('change', () => updateSettings());
+
+        // 添加輸入框的輸入事件監聽器，實現即時更新
+        document.getElementById('globalExchangeRate').addEventListener('input', debounce(() => updateSettings(), 500));
+        document.getElementById('globalInternationalShipping').addEventListener('input', debounce(() => updateSettings(), 500));
+        document.getElementById('globalPlatformCommission').addEventListener('input', debounce(() => updateSettings(), 500));
+
+        // 防抖函數
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // 從計算機頁面接收資料
+        window.addEventListener('message', async function(event) {
+            if (event.data.type === 'newProduct') {
+                try {
+                    const docRef = await db.collection('products').add({
+                        ...event.data.product,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    const newProduct = {
+                        id: docRef.id,
+                        ...event.data.product
+                    };
+                    products.unshift(newProduct);
+                    currentPage = 1;
+                    initTable();
+                } catch (error) {
+                    console.error("Error adding new product:", error);
+                    alert("新增商品時發生錯誤");
+                }
+            } else if (event.data.type === 'updateProduct') {
+                try {
+                    const index = event.data.index;
+                    if (index >= 0 && index < products.length) {
+                        const product = products[index];
+                        await db.collection('products').doc(product.id).update(event.data.product);
+                        products[index] = { ...product, ...event.data.product };
+                        initTable();
+                    }
+                } catch (error) {
+                    console.error("Error updating product:", error);
+                    alert("更新商品時發生錯誤");
+                }
+            }
+        });
+
+        // 檢查 URL 參數，處理從計算機頁面返回的情況
+        window.addEventListener('load', async function() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                if (params.has('returnData')) {
+                    // 使用 decodeURIComponent 解碼
+                    const returnData = JSON.parse(decodeURIComponent(params.get('returnData')));
+                    if (returnData && returnData.index >= 0) {
+                        const product = products[returnData.index];
+                        if (product && product.id) {
+                            // 確保所有數值都是正確的格式
+                            const updatedProduct = {
+                                ...returnData.product,
+                                purchasePrice: parseFloat(returnData.product.purchasePrice) || 0,
+                                quantity: parseInt(returnData.product.quantity) || 0,
+                                singleWeight: parseFloat(returnData.product.singleWeight) || 0,
+                                totalWeight: parseFloat(returnData.product.totalWeight) || 0,
+                                materialCount: parseInt(returnData.product.materialCount) || 0,
+                                inlandShipping: parseFloat(returnData.product.inlandShipping) || 0,
+                                internationalShipping: parseFloat(returnData.product.internationalShipping) || 0,
+                                exchangeRate: parseFloat(returnData.product.exchangeRate) || settings.exchangeRate,
+                                platformCommission: parseFloat(returnData.product.platformCommission) || settings.platformCommission,
+                                singleCost: parseFloat(returnData.product.singleCost) || 0,
+                                totalCost: parseFloat(returnData.product.totalCost) || 0,
+                                suggestedPrice: parseFloat(returnData.product.suggestedPrice) || 0,
+                                actualPrice: parseFloat(returnData.product.actualPrice) || 0,
+                                profitLoss: parseFloat(returnData.product.profitLoss) || 0
+                            };
+
+                            // 更新現有商品
+                            await db.collection('products').doc(product.id).update(updatedProduct);
+                            products[returnData.index] = { ...product, ...updatedProduct };
+                            
+                            // 重新計算商品數據
+                            recalculateProduct(products[returnData.index]);
+                            
+                            // 更新表格顯示
+                            initTable();
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Error handling return data:", error);
+                alert("處理返回數據時發生錯誤");
+            }
+            
+            // 載入數據
+            await loadData();
+        });
+
+        // 監聽來自 index.html 的消息
+        window.addEventListener('message', async function(event) {
+            try {
+                if (event.data.type === 'calculationComplete') {
+                    const updatedProduct = event.data.product;
+                    const index = event.data.index;
+                    
+                    if (index >= 0 && index < products.length) {
+                        const product = products[index];
+                        // 確保所有數值都是正確的格式
+                        const formattedProduct = {
+                            ...updatedProduct,
+                            purchasePrice: parseFloat(updatedProduct.purchasePrice) || 0,
+                            quantity: parseInt(updatedProduct.quantity) || 0,
+                            singleWeight: parseFloat(updatedProduct.singleWeight) || 0,
+                            totalWeight: parseFloat(updatedProduct.totalWeight) || 0,
+                            materialCount: parseInt(updatedProduct.materialCount) || 0,
+                            inlandShipping: parseFloat(updatedProduct.inlandShipping) || 0,
+                            internationalShipping: parseFloat(updatedProduct.internationalShipping) || 0,
+                            exchangeRate: parseFloat(updatedProduct.exchangeRate) || settings.exchangeRate,
+                            platformCommission: parseFloat(updatedProduct.platformCommission) || settings.platformCommission,
+                            singleCost: parseFloat(updatedProduct.singleCost) || 0,
+                            totalCost: parseFloat(updatedProduct.totalCost) || 0,
+                            suggestedPrice: parseFloat(updatedProduct.suggestedPrice) || 0,
+                            actualPrice: parseFloat(updatedProduct.actualPrice) || 0,
+                            profitLoss: parseFloat(updatedProduct.profitLoss) || 0
+                        };
+
+                        // 更新本地數據
+                        Object.assign(product, formattedProduct);
+                        
+                        // 重新計算商品數據
+                        recalculateProduct(product);
+                        
+                        // 更新 Firestore
+                        await db.collection('products').doc(product.id).update(formattedProduct);
+                        
+                        // 更新表格顯示
+                        initTable();
+                    }
+                }
+            } catch (error) {
+                console.error("Error handling message:", error);
+                alert("處理消息時發生錯誤");
+            }
+        });
+
+        // 修改重新計算商品數據函數
+        function recalculateProduct(product) {
+            try {
+                if (!product) {
+                    console.error("Product is undefined");
+                    return;
+                }
+
+                // 確保所有數值都是數字類型
+                const quantity = parseFloat(product.quantity) || 0;
+                const singleWeight = parseFloat(product.singleWeight) || 0;
+                const totalWeight = parseFloat(product.totalWeight) || 0;
+                const purchasePrice = parseFloat(product.purchasePrice) || 0;
+                const inlandShipping = parseFloat(product.inlandShipping) || 0;
+                const materialCount = parseInt(product.materialCount) || 0;
+                const exchangeRate = parseFloat(product.exchangeRate) || settings.exchangeRate;
+                const platformCommission = parseFloat(product.platformCommission) || settings.platformCommission;
+                const actualPrice = parseFloat(product.actualPrice) || 0;
+
+                // 自動計算單重和總重
+                if (product.lastModifiedField === 'singleWeight' && quantity > 0) {
+                    product.totalWeight = (singleWeight * quantity).toFixed(2);
+                } else if (product.lastModifiedField === 'totalWeight' && quantity > 0) {
+                    product.singleWeight = (totalWeight / quantity).toFixed(2);
+                }
+
+                let singleCost = 0;
+                let totalCost = 0;
+
+                if (product.currency === 'CNY') {
+                    // 計算總成本
+                    const totalProductCost = purchasePrice * quantity;
+                    const costAfterExchange = (totalProductCost + inlandShipping) * exchangeRate;
+                    
+                    // 計算國際運費
+                    const internationalShippingTotal = (parseFloat(product.totalWeight) * settings.internationalShipping) + 
+                        (materialCount > 6 ? (materialCount - 6) * 25 : 0);
+                    
+                    // 計算總成本和單價成本
+                    totalCost = costAfterExchange + internationalShippingTotal;
+                    singleCost = quantity > 0 ? totalCost / quantity : 0;
+                    
+                    // 更新商品數據
+                    product.singleCost = singleCost.toFixed(2);
+                    product.totalCost = totalCost.toFixed(2);
+                } else {
+                    // 對於非 CNY 幣種，使用現有的成本數據
+                    singleCost = parseFloat(product.singleCost) || 0;
+                    totalCost = parseFloat(product.totalCost) || 0;
+                }
+
+                // 計算建議定價和損益
+                const platformRate = 1 - (platformCommission / 100);
+                const suggestedPrice = singleCost / platformRate;
+                product.suggestedPrice = suggestedPrice.toFixed(2);
+
+                // 計算定價損益，即使實際定價為 0 也計算
+                const profitLoss = (actualPrice * platformRate) - singleCost;
+                product.profitLoss = profitLoss.toFixed(2);
+
+                return product;
+            } catch (error) {
+                console.error("Error recalculating product:", error);
+                alert("重新計算商品數據時發生錯誤");
+                return product;
+            }
+        }
+
+        // 儲存商品資料
+        function saveProducts() {
+            localStorage.setItem('products', JSON.stringify(products));
+        }
+
+        // 返回計算機
+        function returnToIndex() {
+            window.location.href = 'index.html';
+        }
+
+        // 修改商品名稱點擊處理函數
+        function handleProductNameClick(index) {
+            const tableContainer = document.querySelector('.table-container');
+            if (tableContainer.classList.contains('delete-mode')) {
+                const productName = document.querySelector(`.product-name[data-index="${index}"]`);
+                const checkbox = document.querySelector(`.product-checkbox[data-index="${index}"]`);
+                
+                if (productName && checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    productName.classList.toggle('selected');
+                    // 移除內聯樣式，讓 CSS 類控制顏色
+                    productName.style.color = '';
+                }
+            } else {
+                const product = products[index];
+                if (!product) {
+                    console.error("Product not found at index:", index);
+                    return;
+                }
+
+                // 確保所有數值都是正確的格式
+                const formattedProduct = {
+                    id: product.id,
+                    name: product.name || '',
+                    currency: product.currency || 'CNY',
+                    purchasePrice: parseFloat(product.purchasePrice) || 0,
+                    quantity: parseInt(product.quantity) || 0,
+                    singleWeight: parseFloat(product.singleWeight) || 0,
+                    totalWeight: parseFloat(product.totalWeight) || 0,
+                    materialCount: parseInt(product.materialCount) || 0,
+                    inlandShipping: parseFloat(product.inlandShipping) || 0,
+                    internationalShipping: parseFloat(product.internationalShipping) || 0,
+                    exchangeRate: parseFloat(product.exchangeRate) || settings.exchangeRate,
+                    platformCommission: parseFloat(product.platformCommission) || settings.platformCommission,
+                    singleCost: parseFloat(product.singleCost) || 0,
+                    totalCost: parseFloat(product.totalCost) || 0,
+                    suggestedPrice: parseFloat(product.suggestedPrice) || 0,
+                    actualPrice: parseFloat(product.actualPrice) || 0,
+                    profitLoss: parseFloat(product.profitLoss) || 0,
+                    timestamp: product.timestamp,
+                    isEditMode: true  // 添加編輯模式標記
+                };
+
+                // 直接使用 JSON.stringify，不需要額外的編碼
+                const params = new URLSearchParams({
+                    mode: 'edit',
+                    id: index,
+                    data: JSON.stringify(formattedProduct)
+                });
+                window.location.href = `index.html?${params.toString()}`;
+            }
+        }
+
+        // 修改切换删除模式函数
+        function toggleDeleteMode() {
+            const deleteOptions = document.getElementById('deleteOptions');
+            const tableContainer = document.querySelector('.table-container');
+            const deleteModeToggle = document.getElementById('deleteModeToggle');
+            
+            if (deleteOptions.style.display === 'none') {
+                // 进入删除模式
+                deleteOptions.style.display = 'flex';
+                tableContainer.classList.add('delete-mode');
+                deleteModeToggle.classList.add('active');
+            } else {
+                // 退出删除模式
+                cancelDelete();
+            }
+        }
+
+        // 修改取消删除函数
+        function cancelDelete() {
+            // 重新載入頁面
+            window.location.reload();
+        }
+
+        // 修改全选功能
+        function selectAll() {
+            const checkboxes = document.querySelectorAll('.product-checkbox');
+            const productNames = document.querySelectorAll('.product-name');
+            const allSelected = Array.from(checkboxes).every(checkbox => checkbox.checked);
+            
+            // 切換全選狀態
+            const newState = !allSelected;
+            
+            checkboxes.forEach(checkbox => checkbox.checked = newState);
+            productNames.forEach(name => {
+                if (newState) {
+                    name.classList.add('selected');
+                } else {
+                    name.classList.remove('selected');
+                }
+            });
+        }
+
+        // 切換視圖模式
+        function toggleViewMode() {
+            isFullView = !isFullView;
+            const toggleButton = document.getElementById('viewModeToggle');
+            toggleButton.textContent = isFullView ? '精簡模式' : '完整模式';
+            
+            // 切換表格容器的類
+            const tableContainer = document.querySelector('.table-container');
+            if (isFullView) {
+                tableContainer.classList.remove('simplified-view');
+            } else {
+                tableContainer.classList.add('simplified-view');
+            }
+            
+            // 切換設置面板的顯示狀態
+            const settingsPanel = document.querySelector('.right-settings');
+            settingsPanel.style.display = isFullView ? 'flex' : 'none';
+            
+            // 重新初始化表格
+            initTable();
+        }
+
+        // 修改初始化表格函數中的精簡模式欄位定義
+        function initTable() {
+            const simpleFields = ['name', 'purchasePrice', 'singleCost', 'totalCost', 'suggestedPrice', 'actualPrice', 'profitLoss'];
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedProducts = products.slice(start, end);
+            paginatedProducts.forEach((product, index) => {
+                const row = document.createElement('tr');
+                // 處理定價損益的顯示顏色
+                const profitLoss = parseFloat(product.profitLoss) || 0;
+                const profitLossColor = profitLoss < 0 ? '#ff3366' : '#00ffcc';
+                // 處理數值的格式化
+                const formatNumber = (value) => {
+                    if (value === '' || value === null || value === undefined) return '0';
+                    return Math.round(parseFloat(value)).toString();
+                };
+                function formatDecimal(value) {
+                    if (value === '' || value === null || value === undefined) return '0';
+                    const num = parseFloat(value);
+                    if (isNaN(num)) return '0';
+                    return num % 1 === 0 ? num.toString() : num.toFixed(2);
+                }
+                // 修改內地運費顯示邏輯
+                const inlandShippingValue = parseFloat(product.inlandShipping) || 0;
+                const inlandShippingDisplay = inlandShippingValue === 0 ? '無' : formatDecimal(product.inlandShipping);
+                // 修改材數顯示邏輯
+                const materialCount = parseInt(product.materialCount) || 0;
+                const materialCountDisplay = materialCount <= 6 ? '無' : materialCount.toString();
+                // 修改實際定價顯示邏輯
+                const actualPriceValue = parseFloat(product.actualPrice) || 0;
+                const actualPriceDisplay = actualPriceValue === 0 ? '無' : formatNumber(product.actualPrice);
+                row.innerHTML = `
+                    <td>
+                        <input type="checkbox" class="product-checkbox" data-index="${start + index}" style="display: none;">
+                        <span class="product-name" data-index="${start + index}" onclick="handleProductNameClick(${start + index})" style="cursor: pointer; color: #00ffcc;">
+                            ${product.name || '未命名商品'}
+                        </span>
+                    </td>
+                    <td class="editable-cell" data-field="purchasePrice" data-index="${start + index}">${formatDecimal(product.purchasePrice)}</td>
+                    <td class="editable-cell full-view" data-field="quantity" data-index="${start + index}">${formatNumber(product.quantity)}</td>
+                    <td class="editable-cell full-view" data-field="inlandShipping" data-index="${start + index}">${inlandShippingDisplay}</td>
+                    <td class="editable-cell full-view" data-field="singleWeight" data-index="${start + index}">${formatDecimal(product.singleWeight)}</td>
+                    <td class="editable-cell full-view" data-field="totalWeight" data-index="${start + index}">${formatDecimal(product.totalWeight)}</td>
+                    <td class="editable-cell full-view" data-field="materialCount" data-index="${start + index}">${materialCountDisplay}</td>
+                    <td class="non-editable-cell" data-field="singleCost" data-index="${start + index}">${formatNumber(product.singleCost)}</td>
+                    <td class="non-editable-cell" data-field="totalCost" data-index="${start + index}">${formatNumber(product.totalCost)}</td>
+                    <td class="non-editable-cell" data-field="suggestedPrice" data-index="${start + index}">${formatNumber(product.suggestedPrice)}</td>
+                    <td class="editable-cell" data-field="actualPrice" data-index="${start + index}">${actualPriceDisplay}</td>
+                    <td class="non-editable-cell" data-field="profitLoss" data-index="${start + index}" style="color: ${profitLossColor}">${formatNumber(product.profitLoss)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            // 保持排序圖標狀態
+            if (currentSort.column) {
+                const th = document.querySelector(`.sortable[data-field="${currentSort.column}"]`);
+                if (th) {
+                    th.classList.add(currentSort.direction);
+                }
+            }
+            // 添加单元格点击事件
+            const editableCells = document.querySelectorAll('.editable-cell');
+            editableCells.forEach(cell => {
+                cell.addEventListener('click', function(e) {
+                    // 如果在删除模式下，禁用编辑功能
+                    if (document.querySelector('.table-container').classList.contains('delete-mode')) {
+                        return;
+                    }
+                    
+                    if (e.target.classList.contains('cell-edit-input')) return;
+                    
+                    const field = this.dataset.field;
+                    const index = parseInt(this.dataset.index);
+                    const product = products[index];
+                    const currentValue = product[field] || '';
+                    
+                    // 创建输入框
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = currentValue;
+                    input.className = 'cell-edit-input';
+                    
+                    // 根据字段类型设置输入类型
+                    if (['purchasePrice', 'singleWeight', 'totalWeight', 'inlandShipping', 
+                         'internationalShipping', 'exchangeRate', 'platformCommission', 
+                         'singleCost', 'totalCost', 'suggestedPrice', 'actualPrice', 
+                         'profitLoss'].includes(field)) {
+                        input.type = 'number';
+                        input.step = '0.01';
+                    } else if (field === 'quantity' || field === 'materialCount') {
+                        input.type = 'number';
+                        input.step = '1';
+                    }
+                    
+                    // 保存原始内容
+                    const originalContent = this.innerHTML;
+                    
+                    // 清空单元格并添加输入框
+                    this.innerHTML = '';
+                    this.appendChild(input);
+                    input.focus();
+
+                    // 添加輸入事件監聽器，實現即時計算
+                    input.addEventListener('input', function() {
+                        const newValue = this.value.trim();
+                        try {
+                            // 設置最後修改的欄位
+                            product.lastModifiedField = field;
+                            
+                            // 更新本地数据
+                            product[field] = newValue;
+                            
+                            // 重新计算商品数据並獲取更新後的產品
+                            const updatedProduct = recalculateProduct(product);
+                            
+                            // 更新表格显示
+                            updateRowValues(index, updatedProduct);
+                        } catch (error) {
+                            console.error("Error updating field:", error);
+                        }
+                    });
+                    
+                    // 处理输入框事件
+                    input.addEventListener('blur', async function() {
+                        const newValue = this.value.trim();
+                        if (newValue !== currentValue) {
+                            try {
+                                // 設置最後修改的欄位
+                                product.lastModifiedField = field;
+                                
+                                // 更新本地数据
+                                product[field] = newValue;
+                                
+                                // 重新计算商品数据
+                                recalculateProduct(product);
+                                
+                                // 更新 Firestore
+                                await db.collection('products').doc(product.id).update(product);
+                                
+                                // 更新表格显示
+                                initTable();
+
+                                // 通知 index.html 更新對應欄位
+                                const indexWindow = window.opener;
+                                if (indexWindow && !indexWindow.closed) {
+                                    indexWindow.postMessage({
+                                        type: 'updateField',
+                                        index: index,
+                                        field: field,
+                                        value: newValue
+                                    }, '*');
+                                }
+                                
+                            } catch (error) {
+                                console.error("Error updating field:", error);
+                                alert("更新數據時發生錯誤");
+                                cell.innerHTML = originalContent;
+                            }
+                        } else {
+                            cell.innerHTML = originalContent;
+                        }
+                    });
+                    
+                    // 處理鍵盤事件
+                    input.addEventListener('keydown', async function(e) {
+                        if (e.key === 'Backspace' || e.key === 'Delete') {
+                            e.preventDefault();
+                            // 直接清空輸入框
+                            this.value = '';
+                            // 清空數據
+                            product[field] = '';
+                            // 重新計算商品數據
+                            recalculateProduct(product);
+                            // 更新 Firestore
+                            try {
+                                await db.collection('products').doc(product.id).update(product);
+                                // 只更新當前行的值，而不是重新生成整個表格
+                                updateRowValues(index, product);
+                                // 通知 index.html 更新對應欄位
+                                const indexWindow = window.opener;
+                                if (indexWindow && !indexWindow.closed) {
+                                    indexWindow.postMessage({
+                                        type: 'updateField',
+                                        index: index,
+                                        field: field,
+                                        value: ''
+                                    }, '*');
+                                }
+                                // 保持焦點
+                                this.focus();
+                            } catch (error) {
+                                console.error("Error clearing field:", error);
+                                alert("清空數據時發生錯誤");
+                                cell.innerHTML = originalContent;
+                            }
+                        } else if (e.key === 'Enter') {
+                            e.preventDefault();
+                            this.blur();
+                        }
+                    });
+                });
+            });
+
+            updatePagination();
+        }
+
+        // 更新分頁
+        function updatePagination() {
+            const totalPages = Math.ceil(products.length / itemsPerPage);
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            // 上一頁按鈕
+            if (currentPage > 1) {
+                const prevButton = document.createElement('button');
+                prevButton.textContent = '上一頁';
+                prevButton.onclick = () => {
+                    currentPage--;
+                    initTable();
+                };
+                pagination.appendChild(prevButton);
+            }
+
+            // 頁碼按鈕
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                if (i === currentPage) {
+                    pageButton.classList.add('active');
+                }
+                pageButton.onclick = () => {
+                    currentPage = i;
+                    initTable();
+                };
+                pagination.appendChild(pageButton);
+            }
+
+            // 下一頁按鈕
+            if (currentPage < totalPages) {
+                const nextButton = document.createElement('button');
+                nextButton.textContent = '下一頁';
+                nextButton.onclick = () => {
+                    currentPage++;
+                    initTable();
+                };
+                pagination.appendChild(nextButton);
+            }
+        }
+
+        // 搜尋功能
+        function searchTable() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const tbody = document.getElementById('tableBody');
+            const rows = tbody.getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.getElementsByTagName('td');
+                let found = false;
+
+                for (let j = 0; j < cells.length; j++) {
+                    const cell = cells[j];
+                    if (cell.textContent.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                row.style.display = found ? '' : 'none';
+            }
+
+            // 保持排序圖標狀態
+            if (currentSort.column) {
+                const th = document.querySelector(`.sortable[data-field="${currentSort.column}"]`);
+                if (th) {
+                    th.classList.add(currentSort.direction);
+                }
+            }
+        }
+
+        // 關閉編輯視窗
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            currentEditIndex = -1;
+        }
+
+        // 修改更新行數據的函數
+        function updateRowValues(index, product) {
+            const row = document.querySelector(`tr:nth-child(${index + 1})`);
+            if (!row) return;
+
+            // 更新所有相關單元格的值
+            const cells = row.querySelectorAll('.editable-cell');
+            cells.forEach(cell => {
+                const field = cell.dataset.field;
+                if (field) {
+                    const value = product[field];
+                    if (value !== undefined) {
+                        if (field === 'inlandShipping') {
+                            // 修改內地運費顯示邏輯
+                            const inlandShippingValue = parseFloat(value) || 0;
+                            cell.textContent = inlandShippingValue === 0 ? '無' : formatDecimal(value);
+                        } else if (field === 'materialCount') {
+                            // 修改材數顯示邏輯
+                            const materialCount = parseInt(value) || 0;
+                            cell.textContent = materialCount <= 6 ? '無' : materialCount.toString();
+                        } else if (field === 'actualPrice') {
+                            // 修改實際定價顯示邏輯
+                            const actualPriceValue = parseFloat(value) || 0;
+                            cell.textContent = actualPriceValue === 0 ? '無' : formatNumber(value);
+                        } else if (['purchasePrice', 'singleWeight', 'totalWeight'].includes(field)) {
+                            // 處理需要顯示小數點後兩位的欄位
+                            cell.textContent = formatDecimal(value);
+                        } else if (['quantity', 'singleCost', 'totalCost', 'suggestedPrice', 'profitLoss'].includes(field)) {
+                            cell.textContent = formatNumber(value);
+                        } else {
+                            cell.textContent = value || '0';
+                        }
+                    }
+                }
+            });
+
+            // 更新定價損益的顏色
+            const profitLossCell = row.querySelector('td[data-field="profitLoss"]');
+            if (profitLossCell) {
+                const profitLoss = parseFloat(product.profitLoss) || 0;
+                profitLossCell.style.color = profitLoss < 0 ? '#ff3366' : '#00ffcc';
+            }
+        }
+
+        // 添加確認刪除函數
+        async function confirmDelete() {
+            try {
+                // 獲取所有被選中的商品
+                const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
+                if (selectedCheckboxes.length === 0) {
+                    alert('請選擇要刪除的商品');
+                    return;
+                }
+
+                if (confirm(`確定要刪除選中的 ${selectedCheckboxes.length} 個商品嗎？`)) {
+                    // 創建一個批次操作
+                    const batch = db.batch();
+                    
+                    // 從後往前刪除，避免索引變化
+                    const selectedIndices = Array.from(selectedCheckboxes)
+                        .map(checkbox => parseInt(checkbox.dataset.index))
+                        .sort((a, b) => b - a);
+
+                    for (const index of selectedIndices) {
+                        const product = products[index];
+                        if (product && product.id) {
+                            // 添加到批次刪除
+                            batch.delete(db.collection('products').doc(product.id));
+                            // 從本地數組中移除
+                            products.splice(index, 1);
+                        }
+                    }
+
+                    // 執行批次刪除
+                    await batch.commit();
+                    
+                    // 重置刪除模式
+                    cancelDelete();
+                    
+                    // 重新初始化表格
+                    initTable();
+                }
+            } catch (error) {
+                console.error("Error deleting products:", error);
+                alert("刪除商品時發生錯誤");
+            }
+        }
+
+        // 添加設定輸入框的鍵盤事件處理
+        document.addEventListener('DOMContentLoaded', function() {
+            const settingInputs = [
+                document.getElementById('globalExchangeRate'),
+                document.getElementById('globalInternationalShipping'),
+                document.getElementById('globalPlatformCommission')
+            ];
+
+            settingInputs.forEach(input => {
+                if (input) {
+                    // 保存原始值
+                    let originalValue = input.value;
+
+                    // 添加鍵盤事件監聽器
+                    input.addEventListener('keydown', async function(e) {
+                        if (e.key === 'Backspace' || e.key === 'Delete') {
+                            e.preventDefault();
+                            // 直接清空輸入框
+                            this.value = '';
+                            // 保持焦點
+                            this.focus();
+                        } else if (e.key === 'Enter') {
+                            e.preventDefault();
+                            // 觸發更新
+                            await updateSettings();
+                            // 失去焦點
+                            this.blur();
+                        }
+                    });
+
+                    // 添加輸入事件監聽器，實現即時更新
+                    input.addEventListener('input', debounce(async function() {
+                        if (this.value !== originalValue) {
+                            await updateSettings();
+                        }
+                    }, 500));
+
+                    // 添加失去焦點事件
+                    input.addEventListener('blur', async function() {
+                        if (this.value !== originalValue) {
+                            await updateSettings();
+                        }
+                        originalValue = this.value;
+                    });
+                }
+            });
+        });
+
+        // 修改事件處理邏輯
+        document.addEventListener('DOMContentLoaded', function() {
+            // 資料處理按鈕事件
+            const batchBtn = document.getElementById('batchOperationBtn');
+            const dropdown = document.getElementById('batchDropdown');
+            
+            if (batchBtn && dropdown) {
+                // 點擊按鈕切換下拉選單
+                batchBtn.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    dropdown.classList.toggle('show');
+                });
+
+                // 點擊其他地方關閉下拉選單
+                document.addEventListener('click', function(event) {
+                    if (!event.target.closest('.batch-dropdown')) {
+                        dropdown.classList.remove('show');
+                    }
+                });
+
+                // 防止點擊下拉選單內容時關閉選單
+                dropdown.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                });
+            }
+
+            // 初始化其他功能
+            updateTableHeaders();
+        });
+
+        // 匯出到 Excel
+        async function exportToExcel() {
+            try {
+                // 準備數據
+                const exportData = products.map(product => ({
+                    '商品名稱': product.name || '',
+                    '採購價格': product.purchasePrice || '',
+                    '採購數量': product.quantity || '',
+                    '內地運費': product.inlandShipping || '',
+                    '單重': product.singleWeight || '',
+                    '總重': product.totalWeight || '',
+                    '計材': product.materialCount || '',
+                    '單價成本': product.singleCost || '',
+                    '總成本': product.totalCost || '',
+                    '建議定價': product.suggestedPrice || '',
+                    '實際定價': product.actualPrice || '',
+                    '定價損益': product.profitLoss || ''
+                }));
+
+                // 創建工作簿
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(exportData);
+
+                // 設置列寬
+                const colWidths = [
+                    { wch: 20 }, // 商品名稱
+                    { wch: 12 }, // 採購價格
+                    { wch: 10 }, // 採購數量
+                    { wch: 12 }, // 內地運費
+                    { wch: 10 }, // 單重
+                    { wch: 10 }, // 總重
+                    { wch: 8 },  // 計材
+                    { wch: 12 }, // 單價成本
+                    { wch: 12 }, // 總成本
+                    { wch: 12 }, // 建議定價
+                    { wch: 12 }, // 實際定價
+                    { wch: 12 }  // 定價損益
+                ];
+                ws['!cols'] = colWidths;
+
+                // 添加工作表到工作簿
+                XLSX.utils.book_append_sheet(wb, ws, "商品資料");
+
+                // 生成文件名
+                const fileName = `商品資料_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+                // 下載文件
+                XLSX.writeFile(wb, fileName);
+            } catch (error) {
+                console.error("Error exporting to Excel:", error);
+                alert("匯出 Excel 時發生錯誤");
+            }
+        }
+
+        // 從 Excel 匯入
+        async function importFromExcel(event) {
+            try {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+                        // 驗證數據格式
+                        if (!jsonData.length) {
+                            throw new Error("Excel 文件中沒有數據");
+                        }
+
+                        // 收集所有錯誤
+                        const errors = [];
+                        
+                        // 先檢查所有數據
+                        for (let i = 0; i < jsonData.length; i++) {
+                            const row = jsonData[i];
+                            const rowNumber = i + 2; // Excel 行號從 2 開始（標題佔用第 1 行）
+                            const productData = {
+                                name: row['商品名稱'] || '',
+                                purchasePrice: parseFloat(row['採購價格']) || 0,
+                                quantity: parseInt(row['採購數量']) || 0,
+                                singleWeight: parseFloat(row['單重']) || 0,
+                                totalWeight: parseFloat(row['總重']) || 0,
+                                materialCount: parseInt(row['計材']) || 0,
+                                inlandShipping: parseFloat(row['內地運費']) || 0,
+                                internationalShipping: parseFloat(row['國際運費']) || 0,
+                                exchangeRate: parseFloat(row['匯率']) || settings.exchangeRate,
+                                platformCommission: parseFloat(row['平台抽成']) || settings.platformCommission,
+                                actualPrice: parseFloat(row['實際定價']) || 0,
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                            };
+
+                            // 檢查必填欄位
+                            if (!productData.name) {
+                                errors.push(`請檢查 <strong style="color: #ff3366;">${productData.name}</strong> 商品名稱 資訊`);
+                            }
+                            if (productData.quantity <= 0) {
+                                errors.push(`請檢查 <strong style="color: #ff3366;">${productData.name}</strong> 採購數量 資訊`);
+                            }
+                            if (productData.purchasePrice <= 0) {
+                                errors.push(`請檢查 <strong style="color: #ff3366;">${productData.name}</strong> 採購價格 資訊`);
+                            }
+
+                            // 檢查重量相關數據
+                            if (productData.quantity > 0) {
+                                // 檢查是否同時填寫單重和總重
+                                if (productData.singleWeight > 0 && productData.totalWeight > 0) {
+                                    errors.push(`請檢查 <strong style="color: #ff3366;">${productData.name}</strong> 重量 資訊`);
+                                }
+                                
+                                // 檢查單重是否為負數
+                                if (productData.singleWeight < 0) {
+                                    errors.push(`請檢查 <strong style="color: #ff3366;">${productData.name}</strong> 單重 資訊`);
+                                }
+                                
+                                // 檢查總重是否為負數
+                                if (productData.totalWeight < 0) {
+                                    errors.push(`請檢查 <strong style="color: #ff3366;">${productData.name}</strong> 總重 資訊`);
+                                }
+                            }
+
+                            // 檢查運費相關數據
+                            if (productData.inlandShipping < 0) {
+                                errors.push(`請檢查 <strong style="color: #ff3366;">${productData.name}</strong> 內地運費 資訊`);
+                            }
+
+                            // 檢查計材數據
+                            if (productData.materialCount < 0) {
+                                errors.push(`請檢查 <strong style="color: #ff3366;">${productData.name}</strong> 計材 資訊`);
+                            }
+
+                            // 檢查實際定價
+                            if (productData.actualPrice < 0) {
+                                errors.push(`請檢查 <strong style="color: #ff3366;">${productData.name}</strong> 實際定價 資訊`);
+                            }
+                        }
+
+                        // 如果有錯誤，顯示所有錯誤
+                        if (errors.length > 0) {
+                            const errorMessage = errors.join('<br><br>');
+                            showErrorModal(errorMessage);
+                            // 清空文件輸入
+                            event.target.value = '';
+                            return;
+                        }
+
+                        // 如果沒有錯誤，繼續處理數據
+                        for (const row of jsonData) {
+                            const productData = {
+                                name: row['商品名稱'] || '',
+                                purchasePrice: parseFloat(row['採購價格']) || 0,
+                                quantity: parseInt(row['採購數量']) || 0,
+                                singleWeight: parseFloat(row['單重']) || 0,
+                                totalWeight: parseFloat(row['總重']) || 0,
+                                materialCount: parseInt(row['計材']) || 0,
+                                inlandShipping: parseFloat(row['內地運費']) || 0,
+                                internationalShipping: parseFloat(row['國際運費']) || 0,
+                                exchangeRate: parseFloat(row['匯率']) || settings.exchangeRate,
+                                platformCommission: parseFloat(row['平台抽成']) || settings.platformCommission,
+                                actualPrice: parseFloat(row['實際定價']) || 0,
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                            };
+
+                            // 設置系統全局值
+                            productData.exchangeRate = settings.exchangeRate;
+                            productData.platformCommission = settings.platformCommission;
+                            productData.internationalShipping = settings.internationalShipping;
+                            productData.currency = 'CNY';
+
+                            // 計算重量
+                            if (productData.quantity > 0) {
+                                if (productData.singleWeight > 0) {
+                                    productData.totalWeight = (productData.singleWeight * productData.quantity).toFixed(2);
+                                } else if (productData.totalWeight > 0) {
+                                    productData.singleWeight = (productData.totalWeight / productData.quantity).toFixed(2);
+                                }
+                            }
+
+                            // 計算成本和定價
+                            const totalProductCost = productData.purchasePrice * productData.quantity;
+                            const costAfterExchange = (totalProductCost + productData.inlandShipping) * productData.exchangeRate;
+                            const internationalShippingTotal = (parseFloat(productData.totalWeight) * productData.internationalShipping) + 
+                                (productData.materialCount > 6 ? (productData.materialCount - 6) * 25 : 0);
+                            
+                            productData.totalCost = (costAfterExchange + internationalShippingTotal).toFixed(2);
+                            productData.singleCost = (productData.quantity > 0 ? parseFloat(productData.totalCost) / productData.quantity : 0).toFixed(2);
+
+                            // 計算建議定價和損益
+                            const platformRate = 1 - (productData.platformCommission / 100);
+                            productData.suggestedPrice = (parseFloat(productData.singleCost) / platformRate).toFixed(2);
+                            productData.profitLoss = (productData.actualPrice * platformRate - parseFloat(productData.singleCost)).toFixed(2);
+
+                            // 添加到 Firestore
+                            const docRef = await db.collection('products').add(productData);
+                            productData.id = docRef.id;
+                            products.unshift(productData);
+                        }
+                        
+                        // 更新表格顯示
+                        initTable();
+                        
+                        // 清空文件輸入
+                        event.target.value = '';
+                        
+                        // alert('匯入完成！'); 改為 info modal
+                        showInfoModal('資料匯入完成');
+                    } catch (error) {
+                        console.error("Error importing from Excel:", error);
+                        showErrorModal(`
+                            <p>檔案匯入；發生錯誤：</p>
+                            <p>${error.message}</p>
+                        `);
+                        // 清空文件輸入
+                        event.target.value = '';
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } catch (error) {
+                console.error("Error reading file:", error);
+                showErrorModal(`
+                    <p>檔案讀取；發生錯誤：</p>
+                    <p>${error.message}</p>
+                `);
+            }
+        }
+
+        // 添加錯誤視窗相關函數
+        function showErrorModal(message) {
+            const modal = document.getElementById('errorModal');
+            const modalBody = document.getElementById('errorModalBody');
+            modalBody.innerHTML = message;
+            modal.classList.add('show');  // 使用 add 方法添加 show 類
+        }
+
+        function closeErrorModal() {
+            const modal = document.getElementById('errorModal');
+            modal.classList.remove('show');  // 使用 remove 方法移除 show 類
+        }
+
+        // 匯出空白範本
+        async function exportBlankTemplate() {
+            try {
+                // 創建空白範本數據
+                const templateData = [{
+                    '商品名稱': '',
+                    '採購價格': '',
+                    '採購數量': '',
+                    '內地運費': '',
+                    '單重': '',
+                    '總重': '',
+                    '計材': '',
+                    '實際定價': ''
+                }];
+
+                // 創建工作簿
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(templateData);
+
+                // 設置列寬
+                const colWidths = [
+                    { wch: 20 }, // 商品名稱
+                    { wch: 12 }, // 採購價格
+                    { wch: 10 }, // 採購數量
+                    { wch: 12 }, // 內地運費
+                    { wch: 10 }, // 單重
+                    { wch: 10 }, // 總重
+                    { wch: 8 },  // 計材
+                    { wch: 12 }  // 實際定價
+                ];
+                ws['!cols'] = colWidths;
+
+                // 添加工作表到工作簿
+                XLSX.utils.book_append_sheet(wb, ws, "商品資料範本");
+
+                // 生成文件名
+                const fileName = `空白範本.xlsx`;
+
+                // 下載文件
+                XLSX.writeFile(wb, fileName);
+            } catch (error) {
+                console.error("Error exporting blank template:", error);
+                alert("匯出空白範本時發生錯誤");
+            }
+        }
+
+        // 在頁面載入時初始化表格標題
+        document.addEventListener('DOMContentLoaded', () => {
+            updateTableHeaders();
+        });
+
+        // 添加清除資料功能
+        async function clearAllData() {
+            showPasswordModal();
+        }
+
+        // 顯示密碼驗證視窗
+        function showPasswordModal() {
+            const modal = document.getElementById('passwordModal');
+            modal.classList.add('show');
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('passwordInput').focus();
+        }
+
+        // 關閉密碼驗證視窗
+        function closePasswordModal() {
+            const modal = document.getElementById('passwordModal');
+            modal.classList.remove('show');
+        }
+
+        // 驗證密碼
+        async function verifyPassword() {
+            const password = document.getElementById('passwordInput').value;
+            if (password === '0878') {
+                try {
+                    // 獲取所有商品文檔
+                    const productsSnapshot = await db.collection('products').get();
+                    
+                    // 創建批次操作
+                    const batch = db.batch();
+                    
+                    // 將所有文檔添加到批次刪除
+                    productsSnapshot.docs.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    
+                    // 執行批次刪除
+                    await batch.commit();
+                    
+                    // 清空本地數據
+                    products = [];
+                    
+                    // 重新初始化表格
+                    initTable();
+                    
+                    alert('所有資料已清除！');
+                } catch (error) {
+                    console.error("Error clearing data:", error);
+                    alert("清除資料時發生錯誤");
+                }
+                closePasswordModal();
+            } else {
+                alert('密碼錯誤！');
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordInput').focus();
+            }
+        }
+
+        // 添加密碼輸入框的鍵盤事件
+        document.getElementById('passwordInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                verifyPassword();
+            } else if (e.key === 'Escape') {
+                closePasswordModal();
+            }
+        });
+
+        // 點擊視窗外部關閉密碼驗證視窗
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('passwordModal');
+            if (event.target === modal) {
+                closePasswordModal();
+            }
+        });
+
+        // 新增 info modal 相關函數
+        function showInfoModal(message) {
+            const modal = document.getElementById('infoModal');
+            const modalBody = document.getElementById('infoModalBody');
+            modalBody.innerHTML = message || '資料匯入完成';
+            modal.classList.add('show');
+        }
+        function closeInfoModal() {
+            const modal = document.getElementById('infoModal');
+            modal.classList.remove('show');
+        }
+
+        // 統一 modal 開關函數
+        function openModal(id) {
+            document.getElementById(id).classList.add('show');
+            // ESC 關閉
+            document.onkeydown = function(e) {
+                if (e.key === 'Escape') closeModal(id);
+            };
+            // 點擊遮罩關閉
+            document.getElementById(id).onclick = function(e) {
+                if (e.target === this) closeModal(id);
+            };
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+            document.onkeydown = null;
+            document.getElementById(id).onclick = null;
+        }
+    </script>
+</body>
+</html> 
