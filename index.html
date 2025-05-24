@@ -790,9 +790,9 @@
             singleCost = 0,
             totalCost = 0;
 
-        // 取得並驗證所有輸入值
-        const productPriceVal = parseFloat(getById('product_price').value) || 0;
-        const purchaseQuantityVal = parseFloat(getById('purchase_quantity').value) || 0;
+        // 取得並驗證所有輸入值，使用更嚴格的數字解析
+        const productPriceVal = parseFloat(getById('product_price').value.replace(/[^\d.-]/g, '')) || 0;
+        const purchaseQuantityVal = parseFloat(getById('purchase_quantity').value.replace(/[^\d.-]/g, '')) || 0;
         
         // 檢查是否為編輯模式
         const params = new URLSearchParams(window.location.search);
@@ -804,16 +804,16 @@
         if (isEditMode) {
           // 從 Products.html 獲取全局設定
           const settings = window.opener ? window.opener.settings : null;
-          exchangeRateVal = settings ? settings.exchangeRate : parseFloat(getById('exchange_rate').value) || 0;
-          internationalShippingVal = settings ? settings.internationalShipping : parseFloat(getById('international_shipping').value) || 0;
-          platformCommissionVal = settings ? settings.platformCommission : parseFloat(getById('platform_commission_rate_n').value) || 0;
+          exchangeRateVal = settings ? settings.exchangeRate : parseFloat(getById('exchange_rate').value.replace(/[^\d.-]/g, '')) || 0;
+          internationalShippingVal = settings ? settings.internationalShipping : parseFloat(getById('international_shipping').value.replace(/[^\d.-]/g, '')) || 0;
+          platformCommissionVal = settings ? settings.platformCommission : parseFloat(getById('platform_commission_rate_n').value.replace(/[^\d.-]/g, '')) || 0;
         } else {
-          exchangeRateVal = parseFloat(getById('exchange_rate').value) || 0;
-          internationalShippingVal = parseFloat(getById('international_shipping').value) || 0;
-          platformCommissionVal = parseFloat(getById('platform_commission_rate_n').value) || 0;
+          exchangeRateVal = parseFloat(getById('exchange_rate').value.replace(/[^\d.-]/g, '')) || 0;
+          internationalShippingVal = parseFloat(getById('international_shipping').value.replace(/[^\d.-]/g, '')) || 0;
+          platformCommissionVal = parseFloat(getById('platform_commission_rate_n').value.replace(/[^\d.-]/g, '')) || 0;
         }
         
-        const profitMarginVal = parseFloat(getById('profit_margin_rate_n').value) || 0;
+        const profitMarginVal = parseFloat(getById('profit_margin_rate_n').value.replace(/[^\d.-]/g, '')) || 0;
 
         // 驗證必要數值
         if (isNaN(productPriceVal) || productPriceVal < 0) {
@@ -830,10 +830,10 @@
         if (getById('price_currency').value === 'CNY') {
           // CNY 模式計算
           const inlandShippingVal = getById('shipping_included_yes').checked ? 
-            (parseFloat(getById('inland_shipping').value) || 0) : 0;
+            (parseFloat(getById('inland_shipping').value.replace(/[^\d.-]/g, '')) || 0) : 0;
           
-          const rawWeightVal = parseFloat(getById('weight_value').value) || 0;
-          const materialCountVal = parseInt(getById('material_count').value) || 0;
+          const rawWeightVal = parseFloat(getById('weight_value').value.replace(/[^\d.-]/g, '')) || 0;
+          const materialCountVal = parseInt(getById('material_count').value.replace(/[^\d.-]/g, '')) || 0;
 
           // 計算總成本
           const totalProductCost = getById('price_unit').value === 'unit' ?
