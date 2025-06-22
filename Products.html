@@ -2094,6 +2094,8 @@
         document.getElementById('globalInternationalShipping').addEventListener('input', debounce(() => updateSettings(), 500));
         document.getElementById('globalPlatformCommission').addEventListener('input', debounce(() => updateSettings(), 500));
 
+
+
         // 防抖函數
         function debounce(func, wait) {
             let timeout;
@@ -2489,172 +2491,7 @@
                     th.classList.add(currentSort.direction);
                 }
             }
-            // 添加单元格点击事件
-            const editableCells = document.querySelectorAll('.editable-cell');
-            editableCells.forEach(cell => {
-                cell.addEventListener('click', function(e) {
-                    // 如果在删除模式下，禁用编辑功能
-                    if (document.querySelector('.table-container').classList.contains('delete-mode')) {
-                        return;
-                    }
-                    
-                    if (e.target.classList.contains('cell-edit-input')) return;
-                    
-                    const field = this.dataset.field;
-                    const index = parseInt(this.dataset.index);
-                    const product = products[index];
-                    const currentValue = product[field] || '';
-                    
-                    // 创建输入框
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.value = '';  // 點擊時清空，與匯率輸入框一致
-                    input.className = 'cell-edit-input';
-                    
-                    // 根据字段类型设置输入类型
-                    if (['purchasePrice', 'singleWeight', 'totalWeight', 'inlandShipping', 
-                         'internationalShipping', 'exchangeRate', 'platformCommission', 
-                         'singleCost', 'totalCost', 'suggestedPrice', 'actualPrice', 
-                         'profitLoss'].includes(field)) {
-                        input.type = 'number';
-                        input.step = '0.01';
-                    } else if (field === 'quantity' || field === 'materialCount') {
-                        input.type = 'number';
-                        input.step = '1';
-                    }
-                    
-                    // 保存原始内容
-                    const originalContent = this.innerHTML;
-                    
-                    // 清空单元格并添加输入框
-                    this.innerHTML = '';
-                    this.appendChild(input);
-                    input.focus();
-
-                    // 添加鍵盤事件監聽器
-                    input.addEventListener('keydown', async function(e) {
-                        // 處理 Backspace 和 Delete 鍵
-                        if (e.key === 'Backspace' || e.key === 'Delete') {
-                            e.preventDefault();
-                            // 清空輸入框
-                            this.value = '';
-                            // 保持焦點
-                            this.focus();
-                            return;
-                        }
-
-                        // 只允許數字、小數點、方向鍵
-                        if (!/[\d.]/.test(e.key) && !e.key.startsWith('Arrow') && e.key !== 'Enter' && e.key !== 'Tab') {
-                            e.preventDefault();
-                        }
-
-                        // 防止多個小數點
-                        if (e.key === '.' && this.value.includes('.')) {
-                            e.preventDefault();
-                        }
-
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            // 如果輸入框為空，恢復原始值
-                            if (this.value === '') {
-                                this.value = currentValue;
-                            }
-                            // 失去焦點以觸發保存
-                            this.blur();
-                        }
-                    });
-
-                    // 添加輸入事件監聽器
-                    input.addEventListener('input', function() {
-                        // 只允許數字和小數點
-                        this.value = this.value.replace(/[^\d.]/g, '');
-                        
-                        // 防止多個小數點
-                        const parts = this.value.split('.');
-                        if (parts.length > 2) {
-                            this.value = parts[0] + '.' + parts.slice(1).join('');
-                        }
-                        
-                        // 限制小數點後兩位
-                        if (parts.length === 2 && parts[1].length > 2) {
-                            this.value = parts[0] + '.' + parts[1].substring(0, 2);
-                        }
-                    });
-                    
-                    // 处理输入框事件
-                    input.addEventListener('blur', async function() {
-                        const newValue = this.value.trim();
-                        
-                        // 如果輸入框為空，恢復原始值
-                        if (newValue === '') {
-                            // 恢復原始顯示內容
-                            cell.innerHTML = originalContent;
-                            return;
-                        }
-                        
-                        // 如果有新值且與原值不同，則更新
-                        if (newValue !== currentValue) {
-                            try {
-                                // 設置最後修改的欄位
-                                product.lastModifiedField = field;
-                                
-                                // 更新本地数据
-                                product[field] = newValue;
-                                
-                                // 重新计算商品数据
-                                recalculateProduct(product);
-                                
-                                // 更新時間戳
-                                product.timestamp = firebase.firestore.FieldValue.serverTimestamp();
-                                
-                                // 更新 Firestore
-                                await db.collection('products').doc(product.id).update(product);
-                                
-                                // 將修改的行移動到數組開頭
-                                const productIndex = products.indexOf(product);
-                                if (productIndex > 0) {
-                                    products.splice(productIndex, 1);
-                                    products.unshift(product);
-                                }
-                                
-                                // 重置排序狀態
-                                currentSort = {
-                                    column: null,
-                                    direction: 'asc'
-                                };
-                                
-                                // 檢查是否在搜尋模式
-                                const searchInput = document.getElementById('searchInput');
-                                if (searchInput.value.trim()) {
-                                    // 在搜尋模式下，重新執行搜尋以保持結果
-                                    searchTable();
-                                } else {
-                                    // 不在搜尋模式，正常更新表格
-                                    initTable();
-                                }
-
-                                // 通知 index.html 更新對應欄位
-                                const indexWindow = window.opener;
-                                if (indexWindow && !indexWindow.closed) {
-                                    indexWindow.postMessage({
-                                        type: 'updateField',
-                                        index: index,
-                                        field: field,
-                                        value: newValue
-                                    }, '*');
-                                }
-                            } catch (error) {
-                                console.error("Error updating field:", error);
-                                alert("更新數據時發生錯誤");
-                                cell.innerHTML = originalContent;
-                            }
-                        } else {
-                            // 值相同，恢復原始顯示
-                            cell.innerHTML = originalContent;
-                        }
-                    });
-                });
-            });
+            // 使用統一的編輯事件綁定函數
 
             updatePagination();
 
@@ -2948,11 +2785,7 @@
 
                         if (e.key === 'Enter') {
                             e.preventDefault();
-                            // 如果輸入框為空，恢復原始值
-                            if (this.value === '') {
-                                this.value = currentValue;
-                            }
-                            // 失去焦點以觸發保存
+                            // 失去焦點以觸發保存（blur 事件會處理空值恢復）
                             this.blur();
                         }
                     });
