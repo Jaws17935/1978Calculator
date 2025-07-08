@@ -1477,22 +1477,22 @@
           // 調用 handleShippingMode 來確保內地運費輸入框的顯示狀態正確
           handleShippingMode();
           
-          // 優先使用總重量，以保持精度
+          // 編輯模式下強制使用單重模式
+          document.getElementById('weight_mode').value = 'single';
+          
+          // 根據總重和數量計算單重，或直接使用單重數據
           if (editData.totalWeight && editData.quantity) {
             const totalWeightValue = parseFloat(editData.totalWeight);
             const quantityValue = parseInt(editData.quantity);
             
-            // 設定為總重模式
-            document.getElementById('weight_mode').value = 'total';
-            document.getElementById('weight_value').value = totalWeightValue.toFixed(2);
+            // 計算單重並設置
+            const singleWeightValue = totalWeightValue / quantityValue;
+            document.getElementById('weight_value').value = singleWeightValue.toFixed(2);
             
-            // 在內部記錄實際的高精度單重（但不顯示在輸入框）
-            const actualSingleWeight = totalWeightValue / quantityValue;
-            // 可以將這個值存在元素的 data 屬性中，供計算使用
-            document.getElementById('weight_value').dataset.actualSingleWeight = actualSingleWeight;
+            // 在內部記錄實際的高精度單重
+            document.getElementById('weight_value').dataset.actualSingleWeight = singleWeightValue;
           } else if (editData.singleWeight) {
-            // 如果沒有總重，才使用單重
-            document.getElementById('weight_mode').value = 'single';
+            // 直接使用單重數據
             document.getElementById('weight_value').value = parseFloat(editData.singleWeight).toFixed(2);
           }
           if (editData.materialCount) {
