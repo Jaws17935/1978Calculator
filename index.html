@@ -92,31 +92,7 @@
       box-shadow: 0 0 10px rgba(0, 255, 204, 0.7);
     }
 
-    /* 禁用欄位的樣式 */
-    .card input[type="text"][readonly] {
-      background: rgba(0, 255, 204, 0.08) !important;
-      color: rgba(255, 255, 255, 0.7) !important;
-      border: 0.5px solid rgba(0, 255, 204, 0.3) !important;
-      cursor: not-allowed !important;
-    }
 
-    .card input[type="text"][readonly]:hover {
-      background: rgba(0, 255, 204, 0.12) !important;
-      box-shadow: none !important;
-    }
-
-    .card input[type="text"][readonly]:focus {
-      outline: none !important;
-      box-shadow: none !important;
-    }
-
-    /* 編輯模式專用樣式 */
-    .edit-mode .card input[type="text"][readonly] {
-      background: rgba(0, 255, 204, 0.08) !important;
-      color: rgba(255, 255, 255, 0.7) !important;
-      border: 0.5px solid rgba(0, 255, 204, 0.3) !important;
-      cursor: not-allowed !important;
-    }
 
     .radio-group {
       margin: 6px auto;
@@ -555,17 +531,17 @@
           <span id="material_count_formula_error" class="formula-error"></span>
 
           <label for="exchange_rate">採購匯率</label>
-          <input type="text" id="exchange_rate" value="" readonly title="此設定由商品銷售總表頁面控制">
+          <input type="text" id="exchange_rate" value="" title="預設值來自全局設定，可修改但不會同步回資料庫">
           <span id="exchange_rate_error" class="error-message"></span>
           <span id="exchange_rate_formula_error" class="formula-error"></span>
           
           <label for="international_shipping">國際運費</label>
-          <input type="text" id="international_shipping" value="" readonly title="此設定由商品銷售總表頁面控制">
+          <input type="text" id="international_shipping" value="" title="預設值來自全局設定，可修改但不會同步回資料庫">
           <span id="international_shipping_error" class="error-message"></span>
           <span id="international_shipping_formula_error" class="formula-error"></span>
           
           <label for="platform_commission_rate_n">平台抽成</label>
-          <input type="text" id="platform_commission_rate_n" value="" readonly title="此設定由商品銷售總表頁面控制">
+          <input type="text" id="platform_commission_rate_n" value="" title="預設值來自全局設定，可修改但不會同步回資料庫">
           <span id="platform_commission_rate_n_error" class="error-message"></span>
           <span id="platform_commission_rate_n_formula_error" class="formula-error"></span>
           
@@ -719,25 +695,28 @@
       const params = new URLSearchParams(window.location.search);
       const isEditMode = params.has('mode') && params.get('mode') === 'edit';
       
-      // 載入設定（編輯模式下不載入）
+      // 載入Firebase設定作為預設值（修改後不會同步回Firebase）
       if (!isEditMode) {
         try {
-          // 直接從 Firebase 載入最新設定
+          // 從Firebase載入全局設定作為預設值
           const settingsDoc = await db.collection('settings').doc('global').get();
           if (settingsDoc.exists) {
             const settings = settingsDoc.data();
-            if (settings.exchangeRate !== undefined) {
-              getById('exchange_rate').value = settings.exchangeRate;
-            }
-            if (settings.platformCommission !== undefined) {
-              getById('platform_commission_rate_n').value = settings.platformCommission;
-            }
-            if (settings.internationalShipping !== undefined) {
-              getById('international_shipping').value = settings.internationalShipping;
-            }
+            getById('exchange_rate').value = settings.exchangeRate || '4.5';
+            getById('international_shipping').value = settings.internationalShipping || '15';
+            getById('platform_commission_rate_n').value = settings.platformCommission || '5';
+          } else {
+            // 如果Firebase中沒有設定，使用固定預設值
+            getById('exchange_rate').value = '4.5';
+            getById('international_shipping').value = '15';
+            getById('platform_commission_rate_n').value = '5';
           }
         } catch (error) {
-          console.error("Error loading settings:", error);
+          console.error("Error loading settings as default values:", error);
+          // 載入失敗時使用固定預設值
+          getById('exchange_rate').value = '4.5';
+          getById('international_shipping').value = '15';
+          getById('platform_commission_rate_n').value = '5';
         }
       }
 
@@ -748,7 +727,9 @@
         'inland_shipping',
         'weight_value',
         'material_count',
-
+        'exchange_rate',
+        'international_shipping',
+        'platform_commission_rate_n',
         'profit_margin_rate_n'
       ];
 
@@ -780,11 +761,6 @@
         if (field) {
           field.addEventListener('change', async () => {
             if (fieldId === 'price_currency') {
-              // 檢查是否為編輯模式
-              const isEditMode = new URLSearchParams(window.location.search).has('mode') && 
-                               new URLSearchParams(window.location.search).get('mode') === 'edit';
-              
-              // NTD 模式下平台抽成保持當前值（由 Products.html 控制）
               handleCurrencyMode();
             } else if (fieldId === 'price_unit') {
               handleCurrencyMode();
@@ -803,11 +779,7 @@
         });
       });
 
-      // 添加材積輸入監聽
-      getById('material_count').addEventListener('input', () => {
-        handleMaterialInput();
-        calculate();
-      });
+      // 注意：material_count 的 input 事件監聽已在 attachEnterKeyListeners 中統一處理
 
       // 初始設置
       handleMaterialInput();
@@ -889,11 +861,7 @@
 
         // 對於 CNY 模式，檢查是否有必要的設定值
         if (getById('price_currency').value === 'CNY') {
-          // 檢查是否為編輯模式
-          const params = new URLSearchParams(window.location.search);
-          const isEditMode = params.has('mode') && params.get('mode') === 'edit';
-          
-          if (!isEditMode && exchangeRateVal === 0) {
+          if (exchangeRateVal === 0) {
             getById('exchange_rate_error').innerText = '請輸入採購匯率';
             return;
           }
@@ -1233,21 +1201,7 @@
         getById('inland_shipping').disabled = true;
       }
       
-      // 檢查是否為編輯模式，確保禁用狀態保持
-      const params = new URLSearchParams(window.location.search);
-      if (params.has('mode') && params.get('mode') === 'edit') {
-        const settingsFields = ['exchange_rate', 'international_shipping', 'platform_commission_rate_n'];
-        settingsFields.forEach(fieldId => {
-          const field = getById(fieldId);
-          if (field) {
-            field.disabled = true;
-            field.style.opacity = '0.5';
-            field.style.cursor = 'not-allowed';
-            field.style.backgroundColor = 'rgba(128, 128, 128, 0.1)';
-            field.title = '編輯模式下無法修改此欄位';
-          }
-        });
-      }
+
       
       calculate();
     };
@@ -1272,26 +1226,14 @@
 
         flow.push(
           getById('weight_value'),
-          getById('material_count')
+          getById('material_count'),
+          getById('exchange_rate'),
+          getById('international_shipping')
         );
-        
-        // 編輯模式下不加入全局設定欄位
-        if (!isEditMode) {
-          flow.push(
-            getById('exchange_rate'),
-            getById('international_shipping')
-          );
-        }
       }
 
-      // 編輯模式下不加入平台抽成
-      if (!isEditMode) {
-        flow.push(
-          getById('platform_commission_rate_n')
-        );
-      }
-      
       flow.push(
+        getById('platform_commission_rate_n'),
         getById('profit_margin_rate_n')
       );
 
@@ -1310,6 +1252,10 @@
             // 如果第一位是0且後面有數字，去掉0
             if (value.length > 1 && value[0] === '0' && /^[1-9]/.test(value[1])) {
               e.target.value = value.substring(1);
+            }
+            // 如果是材積欄位，調用特殊處理函數
+            if (elem.id === 'material_count') {
+              handleMaterialInput();
             }
             calculate();
           });
@@ -1500,48 +1446,35 @@
             handleMaterialInput();
           }
           
-          // 編輯模式下載入全局設定
+          // 編輯模式下載入Firebase設定作為預設值
           try {
+            // 從Firebase載入全局設定作為預設值
             const settingsDoc = await db.collection('settings').doc('global').get();
             if (settingsDoc.exists) {
-              const globalSettings = settingsDoc.data();
-              if (globalSettings.exchangeRate !== undefined) {
-                document.getElementById('exchange_rate').value = parseFloat(globalSettings.exchangeRate).toFixed(2);
-              }
-              if (globalSettings.internationalShipping !== undefined) {
-                document.getElementById('international_shipping').value = parseFloat(globalSettings.internationalShipping).toFixed(2);
-              }
-              if (globalSettings.platformCommission !== undefined) {
-                document.getElementById('platform_commission_rate_n').value = parseFloat(globalSettings.platformCommission).toFixed(1);
-              }
+              const settings = settingsDoc.data();
+              document.getElementById('exchange_rate').value = settings.exchangeRate || '4.5';
+              document.getElementById('international_shipping').value = settings.internationalShipping || '15';
+              document.getElementById('platform_commission_rate_n').value = settings.platformCommission || '5';
+            } else {
+              // 如果Firebase中沒有設定，使用固定預設值
+              document.getElementById('exchange_rate').value = '4.5';
+              document.getElementById('international_shipping').value = '15';
+              document.getElementById('platform_commission_rate_n').value = '5';
             }
           } catch (error) {
-            console.error("Error loading global settings in edit mode:", error);
+            console.error("Error loading settings as default values in edit mode:", error);
+            // 載入失敗時使用固定預設值
+            document.getElementById('exchange_rate').value = '4.5';
+            document.getElementById('international_shipping').value = '15';
+            document.getElementById('platform_commission_rate_n').value = '5';
           }
           
           if (editData.actualPrice) {
             document.getElementById('profit_margin_rate_n').value = parseFloat(editData.actualPrice).toFixed(2);
           }
 
-          // 編輯模式下禁用三個全局設定欄位並添加樣式類
+          // 編輯模式下這些欄位也可以編輯用於計算
           document.body.classList.add('edit-mode');
-          const settingsFields = [
-            { id: 'exchange_rate', label: 'exchange_rate' },
-            { id: 'international_shipping', label: 'international_shipping' },
-            { id: 'platform_commission_rate_n', label: 'platform_commission_rate_n' }
-          ];
-          
-          settingsFields.forEach(fieldInfo => {
-            const field = document.getElementById(fieldInfo.id);
-            const label = document.querySelector(`label[for="${fieldInfo.id}"]`);
-            if (field) {
-              field.setAttribute('readonly', 'readonly');
-              field.title = '編輯模式：此設定由商品銷售總表頁面控制';
-            }
-            if (label) {
-              label.title = '編輯模式：此設定由商品銷售總表頁面控制';
-            }
-          });
 
           // 觸發幣別模式處理（但不會清空已設置的值）
           handleCurrencyMode();
@@ -1781,41 +1714,10 @@
       window.location.href = 'Products.html';
     }
 
-    // 移除全局設定更新功能，現在由 Products.html 控制設定
-
-    // 監聽來自 Products.html 的設定更新
-    window.addEventListener('message', function(event) {
-      if (event.data.type === 'updateSettings') {
-        const newSettings = event.data.settings;
-        if (newSettings) {
-          document.getElementById('exchange_rate').value = newSettings.exchangeRate || '';
-          document.getElementById('platform_commission_rate_n').value = newSettings.platformCommission || '';
-          document.getElementById('international_shipping').value = newSettings.internationalShipping || '';
-          calculate();
-        }
-      }
-    });
-
-    // 設置 Firebase 即時監聽，確保設定即時同步
-    if (typeof db !== 'undefined') {
-      db.collection('settings').doc('global').onSnapshot((doc) => {
-        if (doc.exists) {
-          const settings = doc.data();
-          const params = new URLSearchParams(window.location.search);
-          const isEditMode = params.has('mode') && params.get('mode') === 'edit';
-          
-          // 在非編輯模式下才更新欄位值
-          if (!isEditMode) {
-            document.getElementById('exchange_rate').value = settings.exchangeRate || '';
-            document.getElementById('platform_commission_rate_n').value = settings.platformCommission || '';
-            document.getElementById('international_shipping').value = settings.internationalShipping || '';
-            calculate();
-          }
-        }
-      }, (error) => {
-        console.error("Error listening to settings changes:", error);
-      });
-    }
+    // 採購匯率、國際運費、平台抽成的處理說明：
+    // 1. 預設值：從Firebase載入全局設定作為初始值
+    // 2. 可修改：使用者可以自由調整這些值進行計算
+    // 3. 不同步：修改的值不會保存回Firebase資料庫，僅供當前計算使用
   </script>
 </body>
 </html>

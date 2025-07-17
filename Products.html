@@ -340,8 +340,9 @@
             background: rgba(0, 255, 204, 0.1);
             border: 1px solid var(--primary-color);
             border-radius: 4px;
-            color: #ffffff;
-            font-size: 0.85em;
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 0.8em;
             transition: all 0.3s ease;
         }
 
@@ -352,7 +353,7 @@
 
         .search-box input::placeholder {
             color: rgba(0, 255, 204, 0.5);
-            font-size: 0.85em;
+            font-size: 0.8em;
         }
 
         /* 修改設定面板樣式 */
@@ -560,15 +561,6 @@
             padding: 0 4px;
             width: 100%;
             box-sizing: border-box;
-        }
-
-        .select-all-container label {
-            display: none;  /* 隱藏全選標籤 */
-        }
-
-        /* 移除全選框的樣式 */
-        .select-all-container input[type="checkbox"] {
-            display: none;
         }
 
         /* 修改確認刪除按鈕樣式 */
@@ -1572,13 +1564,13 @@
             </div>
             <div class="right-settings full-view">
                 <div class="setting-item">
-                    <input type="number" id="globalExchangeRate" step="0.01" min="0" value="" onchange="updateSettings()" placeholder="採購匯率" title="全域設定：控制所有計算頁面的採購匯率">
+                                            <input type="number" id="globalExchangeRate" step="0.01" min="0" value="" placeholder="採購匯率" title="全域設定：控制所有計算頁面的採購匯率">
                 </div>
                 <div class="setting-item">
-                    <input type="number" id="globalInternationalShipping" step="0.1" min="0" value="" onchange="updateSettings()" placeholder="國際運費" title="全域設定：控制所有計算頁面的國際運費">
+                                            <input type="number" id="globalInternationalShipping" step="0.1" min="0" value="" placeholder="國際運費" title="全域設定：控制所有計算頁面的國際運費">
                 </div>
                 <div class="setting-item">
-                    <input type="number" id="globalPlatformCommission" step="0.1" min="0" value="" onchange="updateSettings()" placeholder="平台抽成" title="全域設定：控制所有計算頁面的平台抽成">
+                                            <input type="number" id="globalPlatformCommission" step="0.1" min="0" value="" placeholder="平台抽成" title="全域設定：控制所有計算頁面的平台抽成">
                 </div>
                 <div class="batch-dropdown">
                     <button type="button" class="batch-operation-btn" id="batchOperationBtn">
@@ -1613,7 +1605,6 @@
         </div>
 
         <div class="select-all-container" style="display: none;" id="deleteOptions">
-            <label onclick="selectAll()">全選</label>
             <button onclick="confirmDelete()" class="confirm-delete-btn">汰除</button>
             <button onclick="cancelDelete()" class="cancel-delete-btn">取消</button>
         </div>
@@ -2084,15 +2075,7 @@
             }
         });
 
-        // 添加輸入框的變更事件監聽器
-        document.getElementById('globalExchangeRate').addEventListener('change', () => updateSettings());
-        document.getElementById('globalInternationalShipping').addEventListener('change', () => updateSettings());
-        document.getElementById('globalPlatformCommission').addEventListener('change', () => updateSettings());
-
-        // 添加輸入框的輸入事件監聽器，實現即時更新
-        document.getElementById('globalExchangeRate').addEventListener('input', debounce(() => updateSettings(), 500));
-        document.getElementById('globalInternationalShipping').addEventListener('input', debounce(() => updateSettings(), 500));
-        document.getElementById('globalPlatformCommission').addEventListener('input', debounce(() => updateSettings(), 500));
+        // 移除重複的事件監聽器 - 功能已整合到DOMContentLoaded監聽器中
 
 
 
@@ -2109,40 +2092,7 @@
             };
         }
 
-        // 從計算機頁面接收資料
-        window.addEventListener('message', async function(event) {
-            if (event.data.type === 'newProduct') {
-                try {
-                    const docRef = await db.collection('products').add({
-                        ...event.data.product,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    const newProduct = {
-                        id: docRef.id,
-                        ...event.data.product
-                    };
-                    products.unshift(newProduct);
-                    currentPage = 1;
-                    initTable();
-                } catch (error) {
-                    console.error("Error adding new product:", error);
-                    alert("新增商品時發生錯誤");
-                }
-            } else if (event.data.type === 'updateProduct') {
-                try {
-                    const index = event.data.index;
-                    if (index >= 0 && index < products.length) {
-                        const product = products[index];
-                        await db.collection('products').doc(product.id).update(event.data.product);
-                        products[index] = { ...product, ...event.data.product };
-                        initTable();
-                    }
-                } catch (error) {
-                    console.error("Error updating product:", error);
-                    alert("更新商品時發生錯誤");
-                }
-            }
-        });
+        // 移除重複的 message 監聽器 - 功能已在上方統一的監聽器中處理
 
         // 檢查 URL 參數，處理從計算機頁面返回的情況
         window.addEventListener('load', async function() {
@@ -2194,52 +2144,7 @@
             await loadData();
         });
 
-        // 監聽來自 index.html 的消息
-        window.addEventListener('message', async function(event) {
-            try {
-                if (event.data.type === 'calculationComplete') {
-                    const updatedProduct = event.data.product;
-                    const index = event.data.index;
-                    
-                    if (index >= 0 && index < products.length) {
-                        const product = products[index];
-                        // 確保所有數值都是正確的格式
-                        const formattedProduct = {
-                            ...updatedProduct,
-                            purchasePrice: parseFloat(updatedProduct.purchasePrice) || 0,
-                            quantity: parseInt(updatedProduct.quantity) || 0,
-                            singleWeight: parseFloat(updatedProduct.singleWeight) || 0,
-                            totalWeight: parseFloat(updatedProduct.totalWeight) || 0,
-                            materialCount: parseInt(updatedProduct.materialCount) || 0,
-                            inlandShipping: parseFloat(updatedProduct.inlandShipping) || 0,
-                            internationalShipping: parseFloat(updatedProduct.internationalShipping) || 0,
-                            exchangeRate: parseFloat(updatedProduct.exchangeRate) || settings.exchangeRate,
-                            platformCommission: parseFloat(updatedProduct.platformCommission) || settings.platformCommission,
-                            singleCost: parseFloat(updatedProduct.singleCost) || 0,
-                            totalCost: parseFloat(updatedProduct.totalCost) || 0,
-                            suggestedPrice: parseFloat(updatedProduct.suggestedPrice) || 0,
-                            actualPrice: parseFloat(updatedProduct.actualPrice) || 0,
-                            profitLoss: parseFloat(updatedProduct.profitLoss) || 0
-                        };
-
-                        // 更新本地數據
-                        Object.assign(product, formattedProduct);
-                        
-                        // 重新計算商品數據
-                        recalculateProduct(product);
-                        
-                        // 更新 Firestore
-                        await db.collection('products').doc(product.id).update(formattedProduct);
-                        
-                        // 更新表格顯示
-                        initTable();
-                    }
-                }
-            } catch (error) {
-                console.error("Error handling message:", error);
-                alert("處理消息時發生錯誤");
-            }
-        });
+        // 移除重複的 message 監聽器 - calculationComplete 功能已在上方統一的監聽器中處理
 
         // 修改重新計算商品數據函數
         function recalculateProduct(product) {
@@ -2316,10 +2221,7 @@
             }
         }
 
-        // 儲存商品資料
-        function saveProducts() {
-            localStorage.setItem('products', JSON.stringify(products));
-        }
+
 
         // 返回計算機
         function returnToIndex() {
@@ -2402,11 +2304,7 @@
             window.location.reload();
         }
 
-        // 修改全选功能
-        function selectAll() {
-            // 移除全選功能
-            return;
-        }
+
 
         // 切換視圖模式
         function toggleViewMode() {
@@ -2883,11 +2781,7 @@
             });
         }
 
-        // 關閉編輯視窗
-        function closeEditModal() {
-            document.getElementById('editModal').style.display = 'none';
-            currentEditIndex = -1;
-        }
+
 
         // 修改更新行數據的函數
         function updateRowValues(index, product) {
@@ -3115,11 +3009,8 @@
                     }, 100));
                 }
             });
-        });
 
-        // 修改事件處理邏輯
-        document.addEventListener('DOMContentLoaded', function() {
-            // 資料處理按鈕事件
+            // 整合批量操作功能
             const batchBtn = document.getElementById('batchOperationBtn');
             const dropdown = document.getElementById('batchDropdown');
             
@@ -3144,9 +3035,25 @@
                 });
             }
 
-            // 初始化其他功能
+            // 整合表格初始化功能
             updateTableHeaders();
+            
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Delete') {
+                        e.preventDefault();
+                        // Delete 鍵清空整個搜尋框
+                        this.value = '';
+                        // 觸發搜尋更新
+                        searchTable();
+                    }
+                    // Backspace 使用預設行為（逐一刪除）
+                });
+            }
         });
+
+        // 移除重複的 DOMContentLoaded 監聽器 - 批量操作功能已整合到主監聽器中
 
         // 匯出到 Excel
         async function exportToExcel() {
@@ -3403,10 +3310,7 @@
             modal.classList.add('show');  // 使用 add 方法添加 show 類
         }
 
-        function closeErrorModal() {
-            const modal = document.getElementById('errorModal');
-            modal.classList.remove('show');  // 使用 remove 方法移除 show 類
-        }
+
 
         // 匯出空白範本
         async function exportBlankTemplate() {
@@ -3454,25 +3358,7 @@
             }
         }
 
-        // 在頁面載入時初始化表格標題
-        document.addEventListener('DOMContentLoaded', () => {
-            updateTableHeaders();
-            
-            // 添加搜尋框的鍵盤事件處理
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) {
-                searchInput.addEventListener('keydown', function(e) {
-                    if (e.key === 'Delete') {
-                        e.preventDefault();
-                        // Delete 鍵清空整個搜尋框
-                        this.value = '';
-                        // 觸發搜尋更新
-                        searchTable();
-                    }
-                    // Backspace 使用預設行為（逐一刪除）
-                });
-            }
-        });
+        // 移除重複的 DOMContentLoaded 監聽器 - 表格初始化功能已整合到主監聽器中
 
         // 添加清除資料功能
         async function clearAllData() {
@@ -3578,48 +3464,7 @@
             document.getElementById(id).onclick = null;
         }
 
-        // 添加表格滾動事件處理
-        document.addEventListener('DOMContentLoaded', function() {
-            // 注释掉滚动事件处理器以改善性能
-            /*
-            const tableContainer = document.querySelector('.table-container');
-            let lastScrollTop = 0;
-            let isScrolling = false;
-            let scrollTimeout;
-            
-            tableContainer.addEventListener('scroll', function() {
-                if (!isScrolling) {
-                    isScrolling = true;
-                }
-                
-                clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(function() {
-                    isScrolling = false;
-                }, 150);
-                
-                const scrollTop = this.scrollTop;
-                const rowHeight = 42;
-                const scrollDirection = scrollTop > lastScrollTop ? 'down' : 'up';
-                
-                // 根據滾動方向決定修正方向
-                let targetScroll;
-                if (scrollDirection === 'down') {
-                    // 向下滾動時，向下取整
-                    targetScroll = Math.ceil(scrollTop / rowHeight) * rowHeight;
-                } else {
-                    // 向上滾動時，向上取整
-                    targetScroll = Math.floor(scrollTop / rowHeight) * rowHeight;
-                }
-                
-                // 只在需要修正時才調整位置
-                if (Math.abs(scrollTop - targetScroll) > 1) {
-                    this.scrollTop = targetScroll;
-                }
-                
-                lastScrollTop = scrollTop;
-            });
-            */
-        });
+        // 移除重複的 DOMContentLoaded 監聽器 - 表格滾動功能已註釋停用以改善性能
     </script>
 </body>
 </html> 
