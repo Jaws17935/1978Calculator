@@ -1,0 +1,2406 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>計算機</title>
+  <style>
+    :root {
+      --primary-color: #00ffcc;
+      --background-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--background-gradient);
+      color: var(--primary-color);
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: auto;
+      position: relative;
+    }
+
+    .dashboard {
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+      width: 380px;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      margin: 12px;
+      border: 0.5px solid rgba(0, 255, 204, 0.3);
+    }
+
+    .input-section {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    .card {
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 10px;
+      padding: 6px;
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+      text-align: center;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .card h1 {
+      margin: 0 0 10px;
+      font-size: 1.6em;
+      color: var(--primary-color);
+      text-shadow: 0 0 5px rgba(0, 255, 204, 0.7);
+    }
+
+    .card label {
+      display: block;
+      margin: 4px auto 2px;
+      color: var(--primary-color);
+      font-size: 0.95em;
+      font-weight: bold;
+      width: fit-content;
+    }
+
+    .card input[type="text"] {
+      width: 85%;
+      max-width: 250px;
+      padding: 6px;
+      background: rgba(0, 255, 204, 0.1);
+      border: 0.5px solid var(--primary-color);
+      border-radius: 5px;
+      color: #ffffff;
+      font-size: 0.9em;
+      display: block;
+      margin: 0 auto;
+      text-align: center;
+      box-sizing: border-box;
+    }
+
+    .card input[type="text"]:focus {
+      outline: none;
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.7);
+    }
+
+    .radio-group {
+      margin: 6px auto;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      width: fit-content;
+      flex-wrap: nowrap;
+    }
+
+    .radio-group label {
+      display: inline-flex;
+      align-items: center;
+      margin: 0;
+      font-size: 0.9em;
+      font-weight: normal;
+      white-space: nowrap;
+    }
+
+    .radio-group input[type="radio"] {
+      margin-right: 5px;
+    }
+
+    .error-message,
+    .formula-error {
+      color: #ff3366;
+      font-size: 0.9em;
+      margin: 2px auto;
+      display: block;
+      width: fit-content;
+    }
+
+    .result {
+      margin: 8px auto;
+      padding: 6px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 6px;
+      border: 0.5px solid var(--primary-color);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 70%;
+      max-width: 200px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    .result p {
+      margin: 2px 0;
+      font-size: 0.9em;
+    }
+
+    .weight-input-group,
+    .price-input-group {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 85%;
+      max-width: 250px;
+      margin: 6px auto;
+      position: relative;
+    }
+
+    .weight-input-group input[type="text"],
+    .price-input-group input[type="text"] {
+      width: 100%;
+      padding: 6px 60px;
+      background: rgba(0, 255, 204, 0.1);
+      border: 0.5px solid var(--primary-color);
+      border-radius: 5px;
+      color: #ffffff;
+      font-size: 0.9em;
+      text-align: center;
+      box-sizing: border-box;
+    }
+
+    .weight-mode-select,
+    .weight-unit-select,
+    .price-unit-select,
+    .price-currency-select {
+      position: absolute;
+      width: 50px;
+      padding: 6px;
+      background: rgba(0, 255, 204, 0.1);
+      border: none;
+      color: #ffffff;
+      font-size: 0.9em;
+      text-align: center;
+      box-sizing: border-box;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: none;
+      text-align-last: center;
+    }
+
+    .weight-mode-select,
+    .price-currency-select {
+      left: 1px;
+      top: 1px;
+      bottom: 1px;
+      border-right: 0.5px solid var(--primary-color);
+      border-radius: 5px 0 0 5px;
+    }
+
+    .weight-unit-select,
+    .price-unit-select {
+      right: 1px;
+      top: 1px;
+      bottom: 1px;
+      border-left: 0.5px solid var(--primary-color);
+      border-radius: 0 5px 5px 0;
+    }
+
+    .weight-mode-select option,
+    .weight-unit-select option,
+    .price-unit-select option,
+    .price-currency-select option {
+      background: #0f0c29;
+      color: var(--primary-color);
+      text-align: center;
+    }
+
+    /* 修改：材積相關樣式 */
+    .material-input-group {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 85%;
+      max-width: 250px;
+      margin: 6px auto;
+      position: relative;
+      height: 32px;
+    }
+
+    .material-label {
+      position: absolute;
+      padding: 0;
+      background: rgba(0, 255, 204, 0.1);
+      border: none;
+      color: #ffffff;
+      font-size: 0.85em;
+      text-align: center;
+      box-sizing: border-box;
+      cursor: pointer;
+      min-width: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 30px;
+      line-height: 30px;
+    }
+
+    .material-label:first-child {
+      left: 1px;
+      top: 1px;
+      bottom: 1px;
+      border-right: 0.5px solid var(--primary-color);
+      border-radius: 5px 0 0 5px;
+    }
+
+    .material-label:last-child {
+      right: 1px;
+      top: 1px;
+      bottom: 1px;
+      border-left: 0.5px solid var(--primary-color);
+      border-radius: 0 5px 5px 0;
+    }
+
+    #material_count {
+      width: 100%;
+      padding: 0 60px;
+      background: rgba(0, 255, 204, 0.1);
+      border: 0.5px solid var(--primary-color);
+      border-radius: 5px;
+      color: #ffffff;
+      font-size: 0.85em;
+      text-align: center;
+      box-sizing: border-box;
+      line-height: 30px;
+      height: 30px;
+    }
+
+    #material_count:focus {
+      outline: none;
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+    }
+
+    .material-normal {
+      color: #ffffff;
+      background: rgba(0, 255, 204, 0.1);
+    }
+
+    .material-normal.active {
+      color: var(--primary-color);
+      text-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
+    }
+
+    .material-extra {
+      color: #ffffff;
+      background: rgba(0, 255, 204, 0.1);
+    }
+
+    .material-extra.active {
+      color: #ff3366;
+      text-shadow: 0 0 5px rgba(255, 51, 102, 0.5);
+    }
+
+    .material-input-group:hover {
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+    }
+
+    /* 統一 modal 樣式 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(3px);
+    }
+    .modal.show {
+      display: flex;
+    }
+    .modal-content {
+      background: rgba(15, 12, 41, 0.98);
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--primary-color);
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+      width: 280px;
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: modalFadeIn 0.3s ease;
+    }
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+    .modal-header {
+      margin-bottom: 12px;
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h2 {
+      color: var(--primary-color);
+      margin: 0;
+      font-size: 1.1em;
+      text-align: center;
+      width: 100%;
+      text-shadow: 0 0 5px rgba(0, 255, 204, 0.3);
+    }
+    .close-button {
+      position: absolute;
+      right: 0;
+      top: 0;
+      background: none;
+      border: none;
+      color: var(--primary-color);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0;
+      margin-left: auto;
+      z-index: 1;
+      opacity: 0.8;
+      transition: opacity 0.2s ease;
+    }
+    .close-button:hover {
+      opacity: 1;
+    }
+    .modal-body {
+      color: #fff;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .modal-body input {
+      width: 100%;
+      padding: 8px 12px;
+      background: rgba(0, 255, 204, 0.1);
+      border: 1px solid var(--primary-color);
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 0.95em;
+      box-sizing: border-box;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .modal-body input:focus {
+      outline: none;
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+      border-color: var(--primary-color);
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+    .modal-footer button {
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.9em;
+      min-width: 70px;
+      border: 1px solid var(--primary-color);
+      color: var(--primary-color);
+      background: rgba(0, 255, 204, 0.1);
+    }
+    .modal-footer button.cancel {
+      background: rgba(255, 51, 102, 0.1);
+      border: 1px solid #ff3366;
+      color: #ff3366;
+    }
+    .modal-footer button.cancel:hover {
+      background: rgba(255, 51, 102, 0.2);
+      box-shadow: 0 0 10px rgba(255, 51, 102, 0.3);
+    }
+    .modal-footer button:hover {
+      background: rgba(0, 255, 204, 0.2);
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+    }
+  </style>
+  <!-- 添加 Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <div class="dashboard">
+    <div class="card">
+      <div class="input-section">
+        <h1 id="pageTitle" style="cursor: pointer; outline: none; padding: 5px; border-radius: 5px;" onblur="this.style.background='transparent'" onfocus="this.style.background='rgba(0, 255, 204, 0.1)'">商品名稱</h1>
+
+        <!-- 未知成本 (N) -->
+        <div id="section_unknown">
+          <!-- 單價 / 總價 -->
+          <div class="price-input-group">
+            <select id="price_currency" class="price-currency-select">
+              <option value="CNY" selected>CNY</option>
+              <option value="NTD">NTD</option>
+            </select>
+            <input type="text" id="product_price" value="">
+            <select id="price_unit" class="price-unit-select">
+              <option value="unit" selected>單價</option>
+              <option value="total">總價</option>
+            </select>
+          </div>
+          <span id="product_price_error" class="error-message"></span>
+          <span id="product_price_formula_error" class="formula-error"></span>
+          
+          <label for="purchase_quantity">採購數量</label>
+          <input type="text" id="purchase_quantity" value="">
+          <span id="purchase_quantity_error" class="error-message"></span>
+          <span id="purchase_quantity_formula_error" class="formula-error"></span>
+          
+          <!-- 需郵費 / 無郵費 -->
+          <div class="radio-group">
+            <label><input type="radio" name="shipping_included" id="shipping_included_no" value="N" checked tabindex="0"> 無郵費</label>
+            <label><input type="radio" name="shipping_included" id="shipping_included_yes" value="Y" tabindex="0"> 需郵費</label>
+          </div>
+          <span id="shipping_included_error" class="error-message"></span>
+          <input type="text" id="inland_shipping" value="">
+          <span id="inland_shipping_error" class="error-message"></span>
+          <span id="inland_shipping_formula_error" class="formula-error"></span>
+          
+          <!-- 重量輸入框 -->
+          <div class="weight-input-group">
+            <select id="weight_mode" class="weight-mode-select">
+              <option value="single" selected>單重</option>
+              <option value="total">總重</option>
+            </select>
+            <input type="text" id="weight_value" value="">
+            <select id="weight_unit" class="weight-unit-select">
+              <option value="g">G</option>
+              <option value="kg" selected>KG</option>
+            </select>
+          </div>
+          <span id="weight_value_error" class="error-message"></span>
+          <span id="weight_value_formula_error" class="formula-error"></span>
+
+          <!-- 修改：商品材數選項 -->
+          <div class="material-input-group">
+            <span class="material-label material-normal">無材</span>
+            <input type="text" id="material_count" value="">
+            <span class="material-label material-extra">計材</span>
+          </div>
+          <span id="material_count_error" class="error-message"></span>
+          <span id="material_count_formula_error" class="formula-error"></span>
+
+          <label for="exchange_rate">採購匯率</label>
+          <input type="text" id="exchange_rate" value="" title="預設值來自全局設定，可修改但不會同步回資料庫">
+          <span id="exchange_rate_error" class="error-message"></span>
+          <span id="exchange_rate_formula_error" class="formula-error"></span>
+          
+          <label for="international_shipping">國際運費</label>
+          <input type="text" id="international_shipping" value="" title="預設值來自全局設定，可修改但不會同步回資料庫">
+          <span id="international_shipping_error" class="error-message"></span>
+          <span id="international_shipping_formula_error" class="formula-error"></span>
+          
+          <label for="platform_commission_rate_n">平台抽成</label>
+          <input type="text" id="platform_commission_rate_n" value="" title="預設值來自全局設定，可修改但不會同步回資料庫">
+          <span id="platform_commission_rate_n_error" class="error-message"></span>
+          <span id="platform_commission_rate_n_formula_error" class="formula-error"></span>
+          
+          <label for="profit_margin_rate_n">實際定價</label>
+          <input type="text" id="profit_margin_rate_n" value="">
+          <span id="profit_margin_rate_n_error" class="error-message"></span>
+          <span id="profit_margin_rate_n_formula_error" class="formula-error"></span>
+        </div>
+      </div>
+
+      <!-- 結果區 -->
+      <div class="result" id="result_area" style="display:none;">
+        <p id="result_single_weight"></p>
+        <p id="result_total_weight"></p> <!-- 總重顯示位置 -->
+        <p id="result_extra_material_fee"></p> <!-- 超材顯示位置 -->
+        <p id="result_single_cost"></p>
+        <p id="result_total_cost"></p>
+        <p>建議定價：<span id="suggested_pricing"></span></p>
+        <p>定價損益：<span id="suggested_profit_loss"></span></p>
+      </div>
+
+      <!-- 功能按鈕 -->
+      <div class="action-buttons" style="margin: 8px 0; display: flex; gap: 20px; justify-content: center;">
+        <button onclick="saveToFirestore()" id="saveButton" style="background: rgba(0, 255, 204, 0.1); border: 1px solid var(--primary-color); color: var(--primary-color); padding: 6px 16px; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;">
+          保存
+        </button>
+        <button id="viewButton" onclick="viewInProducts()" style="background: rgba(0, 255, 204, 0.1); border: 1px solid var(--primary-color); color: var(--primary-color); padding: 6px 16px; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;">
+          查看
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 統一 modal 結構 -->
+  <div class="modal" id="nameModal">
+    <div class="modal-content">
+      <div class="modal-body">
+        <input type="text" id="productNameInput" placeholder="請輸入商品名稱">
+      </div>
+      <div class="modal-footer">
+        <button onclick="confirmSave()">保存</button>
+        <button class="cancel" onclick="closeNameModal(true)">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Firebase 配置
+    const firebaseConfig = {
+      apiKey: "AIzaSyBdFAygUSaUaOGbhqsvkm6Q201yYbvEe5E",
+      authDomain: "computer-168.firebaseapp.com",
+      projectId: "computer-168",
+      storageBucket: "computer-168.firebasestorage.app",
+      messagingSenderId: "1008079543770",
+      appId: "1:1008079543770:web:c45802292e9684357ab4e3",
+      measurementId: "G-Z0SYWETVV9"
+    };
+
+    // 初始化 Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // 全局變量保存當前計算的高精度重量數據
+    let currentPreciseWeights = {
+      singleWeight: null,
+      totalWeight: null
+    };
+
+    // 保存當前正在編輯的輸入框狀態（用於頁面切換時保持輸入）
+    let activeInputState = {
+      element: null,
+      value: '',
+      selectionStart: 0,
+      selectionEnd: 0,
+      isRestoring: false // 標記是否正在恢復狀態
+    };
+
+    // 保存輸入框狀態的函數
+    function saveInputState() {
+      const activeElement = document.activeElement;
+      if (activeElement && activeElement.type === 'text' && activeElement.tagName === 'INPUT') {
+        activeInputState.element = activeElement;
+        activeInputState.value = activeElement.value;
+        activeInputState.selectionStart = activeElement.selectionStart || 0;
+        activeInputState.selectionEnd = activeElement.selectionEnd || 0;
+      }
+    }
+
+    // 恢復輸入框狀態的函數
+    function restoreInputState() {
+      if (activeInputState.element && activeInputState.element.tagName === 'INPUT') {
+        activeInputState.isRestoring = true;
+        activeInputState.element.value = activeInputState.value;
+        // 使用 setTimeout 確保值已設置後再設置游標位置
+        setTimeout(() => {
+          if (activeInputState.element && activeInputState.element.setSelectionRange) {
+            const start = Math.min(activeInputState.selectionStart, activeInputState.value.length);
+            const end = Math.min(activeInputState.selectionEnd, activeInputState.value.length);
+            activeInputState.element.setSelectionRange(start, end);
+            activeInputState.element.focus();
+          }
+          activeInputState.isRestoring = false;
+        }, 10);
+      }
+    }
+
+    // 快速取得常用元素
+    const getById = id => document.getElementById(id);
+    const resultArea = getById('result_area');
+
+    /**
+     * evaluateFormula(str):
+     * - 先驗證字串只含允許的數字與運算符號
+     * - 若合法則用 Function 動態計算
+     * - 非法或失敗則回傳 NaN
+     */
+    const evaluateFormula = str => {
+      if (!str) return 0;
+      if (!/^[0-9+\-*/().\s]+$/.test(str)) {
+        return NaN;
+      }
+      // 檢查是否以運算符號結尾，如果是則移除最後的運算符號
+      if (/[+\-*/]$/.test(str.trim())) {
+        str = str.trim().slice(0, -1);
+      }
+      try {
+        return Function('"use strict"; return (' + str + ');')();
+      } catch (e) {
+        console.error('Formula evaluation error:', e);
+        return NaN;
+      }
+    };
+
+    // 修改：添加輸入事件監聽器
+    window.addEventListener('DOMContentLoaded', async () => {
+      // 檢查是否為編輯模式
+      const params = new URLSearchParams(window.location.search);
+      const isEditMode = params.has('mode') && params.get('mode') === 'edit';
+      
+      // 載入Firebase設定作為預設值（修改後不會同步回Firebase）
+      if (!isEditMode) {
+        try {
+          // 從Firebase載入全局設定作為預設值
+          const settingsDoc = await db.collection('settings').doc('global').get();
+          if (settingsDoc.exists) {
+            const settings = settingsDoc.data();
+            getById('exchange_rate').value = settings.exchangeRate || '4.5';
+            getById('international_shipping').value = settings.internationalShipping || '15';
+            getById('platform_commission_rate_n').value = settings.platformCommission || '5';
+          } else {
+            // 如果Firebase中沒有設定，使用固定預設值
+            getById('exchange_rate').value = '4.5';
+            getById('international_shipping').value = '15';
+            getById('platform_commission_rate_n').value = '5';
+          }
+        } catch (error) {
+          console.error("Error loading settings as default values:", error);
+          // 載入失敗時使用固定預設值
+          getById('exchange_rate').value = '4.5';
+          getById('international_shipping').value = '15';
+          getById('platform_commission_rate_n').value = '5';
+        }
+      }
+
+      // 注意：輸入事件監聽器已在 attachEnterKeyListeners 中統一處理
+
+      // 添加選擇框的變更事件監聽器
+      const selectFields = [
+        'price_currency',
+        'price_unit',
+        'weight_mode',
+        'weight_unit'
+      ];
+
+      selectFields.forEach(fieldId => {
+        const field = getById(fieldId);
+        if (field) {
+          // 為選擇框添加點擊事件處理
+          field.addEventListener('click', e => {
+            // 保存原有數據到 data 屬性中
+            e.target.dataset.originalValue = e.target.value;
+          });
+
+          // 為選擇框添加失焦事件處理
+          field.addEventListener('blur', e => {
+            // 清除保存的原有數據（選擇框總是會有值）
+            if (e.target.dataset.originalValue !== undefined) {
+              delete e.target.dataset.originalValue;
+            }
+          });
+
+          // 為選擇框添加ESC鍵處理
+          field.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && e.target.dataset.originalValue !== undefined) {
+              e.target.value = e.target.dataset.originalValue;
+              delete e.target.dataset.originalValue;
+              if (fieldId === 'price_currency' || fieldId === 'price_unit') {
+                handleCurrencyMode();
+              } else {
+                calculate();
+              }
+              e.target.blur();
+            }
+          });
+
+          field.addEventListener('change', async () => {
+            // 清除保存的原有數據（因為用戶確認更改）
+            if (field.dataset.originalValue !== undefined) {
+              delete field.dataset.originalValue;
+            }
+            
+            if (fieldId === 'price_currency') {
+              handleCurrencyMode();
+            } else if (fieldId === 'price_unit') {
+              handleCurrencyMode();
+            } else {
+              calculate();
+            }
+            
+            // 編輯模式下觸發自動保存
+            if (!isExcludedField(fieldId)) {
+              lastChangedElement = field;
+            }
+            autoSaveInEditMode();
+          });
+        }
+      });
+
+      // 添加單選按鈕的變更事件監聽器
+      const radioButtons = document.querySelectorAll('input[type="radio"][name="shipping_included"]');
+      radioButtons.forEach(radio => {
+        // 為單選按鈕添加點擊事件處理
+        radio.addEventListener('click', e => {
+          // 找到當前選中的單選按鈕並保存其值
+          const currentChecked = document.querySelector('input[name="shipping_included"]:checked');
+          if (currentChecked && currentChecked !== e.target) {
+            e.target.dataset.originalValue = currentChecked.value;
+          }
+        });
+
+        // 為單選按鈕添加ESC鍵處理
+        radio.addEventListener('keydown', e => {
+          if (e.key === 'Escape' && e.target.dataset.originalValue !== undefined) {
+            // 恢復原先選中的單選按鈕
+            const originalValue = e.target.dataset.originalValue;
+            const originalRadio = document.querySelector(`input[name="shipping_included"][value="${originalValue}"]`);
+            if (originalRadio) {
+              originalRadio.checked = true;
+              e.target.checked = false;
+            }
+            delete e.target.dataset.originalValue;
+            handleShippingMode();
+            e.target.blur();
+          }
+        });
+
+        radio.addEventListener('change', () => {
+          // 清除所有單選按鈕的保存數據（因為用戶確認更改）
+          radioButtons.forEach(r => {
+            if (r.dataset.originalValue !== undefined) {
+              delete r.dataset.originalValue;
+            }
+          });
+          handleShippingMode();
+          
+          // 編輯模式下觸發自動保存
+          lastChangedElement = radio; // 單選按鈕不在排除列表中
+          autoSaveInEditMode();
+        });
+      });
+
+      // 注意：material_count 的 input 事件監聽已在 attachEnterKeyListeners 中統一處理
+
+      // 初始設置
+      handleMaterialInput();
+
+      // 先檢查是否為編輯模式並載入數據
+      await checkEditMode();
+      
+      // 編輯模式載入完成後，再初始化其他功能
+      // 這樣可以確保編輯模式的數據不會被覆蓋
+      if (!params.has('mode') || params.get('mode') !== 'edit') {
+        // 非編輯模式下的初始化
+        handleCurrencyMode();
+        handleShippingMode();
+        calculate();
+      }
+      
+      // 總是需要附加事件監聽器
+      attachEnterKeyListeners();
+      
+      // 非編輯模式下聚焦到第一個輸入框
+      if (!params.has('mode') || params.get('mode') !== 'edit') {
+        getById('product_price').focus();
+      }
+
+      // 新增：為商品名稱添加貼上事件監聽器 - 清理格式，只保留純文字
+      const pageTitle = getById('pageTitle');
+      if (pageTitle) {
+        pageTitle.addEventListener('paste', function(e) {
+          e.preventDefault();
+          
+          // 取得貼上的純文字內容
+          const paste = (e.clipboardData || window.clipboardData).getData('text');
+          
+          // 清理文字：移除換行符、多餘空格，只保留純文字
+          const cleanText = paste.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+          
+          if (cleanText) {
+            // 直接設置純文字內容
+            this.textContent = cleanText;
+            
+            // 將游標移到最後
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(this);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        });
+      }
+
+      // 為 productNameInput 添加貼上事件監聽器
+      const productNameInput = getById('productNameInput');
+      if (productNameInput) {
+        productNameInput.addEventListener('paste', function(e) {
+          e.preventDefault();
+          
+          // 取得貼上的純文字內容
+          const paste = (e.clipboardData || window.clipboardData).getData('text');
+          
+          // 清理文字：移除換行符、多餘空格，只保留純文字
+          const cleanText = paste.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+          
+          if (cleanText) {
+            // 直接設置為輸入框的值
+            this.value = cleanText;
+            
+            // 將游標移到最後
+            this.setSelectionRange(cleanText.length, cleanText.length);
+          }
+        });
+      }
+
+      /* --- 設定欄位已改為只讀模式，由 Products.html 控制 --- */
+    });
+
+    // 修改：防抖函數，減少計算頻率
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    // 編輯模式下的自動保存函數（立即保存）
+    let isSaving = false; // 防止重複保存的標記
+    let lastChangedElement = null; // 追蹤最後變更的元素
+    const autoSaveInEditMode = async () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('mode') && params.get('mode') === 'edit' && !isSaving) {
+        try {
+          isSaving = true; // 設置保存中標記
+          const editData = JSON.parse(decodeURIComponent(params.get('data')));
+          
+          // 使用高精度的單重數據
+          const singleWeight = currentPreciseWeights.singleWeight ? 
+            parseFloat(currentPreciseWeights.singleWeight) : '';
+          
+          // 處理內地運費
+          const inlandShipping = getFormattedInlandShipping();
+
+          // 處理採購價格（總價轉單價）
+          let purchasePrice = getById('product_price').value;
+          const priceUnit = getById('price_unit').value;
+          const quantity = parseFloat(getById('purchase_quantity').value) || 0;
+          const priceResult = processPurchasePrice(purchasePrice, priceUnit, quantity);
+          purchasePrice = priceResult.processedPrice;
+          const originalTotalPrice = priceResult.originalTotalPrice;
+          
+          const currentData = {
+            name: getById('pageTitle').textContent,
+            currency: getById('price_currency').value,
+            purchasePrice: parseFloat(purchasePrice).toFixed(6),
+            purchasePriceDisplay: formatNumber(purchasePrice),
+            priceUnit: priceUnit,
+            originalTotalPrice: originalTotalPrice,
+            quantity: parseInt(quantity),
+            inlandShipping: inlandShipping,
+            singleWeight: singleWeight ? parseFloat(singleWeight).toFixed(6) : '',
+            singleWeightDisplay: singleWeight ? formatNumber(singleWeight) : '',
+            materialCount: parseInt(getById('material_count').value) || 0,
+            actualPrice: getById('profit_margin_rate_n').value ? formatNumber(getById('profit_margin_rate_n').value, true) : '',
+            singleCost: getById('result_single_cost').textContent.replace('單價：', '').replace(' 元', ''),
+            totalCost: getById('result_total_cost').textContent.replace('總成本：', '').replace(' 元', ''),
+            suggestedPrice: getById('suggested_pricing').textContent.replace(' 元', ''),
+            profitLoss: getById('suggested_profit_loss').textContent.replace(' 元', ''),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          };
+
+          // 自動保存到 Firebase
+          await db.collection('products').doc(editData.id).update(currentData);
+          
+          // 通知父視窗更新
+          if (window.opener && !window.opener.closed) {
+            window.opener.postMessage({
+              type: 'calculationComplete',
+              product: currentData
+            }, '*');
+          }
+
+          showDataChangeStatus(lastChangedElement, 'saved');
+        } catch (error) {
+          console.error('自動保存錯誤:', error);
+          showDataChangeStatus(lastChangedElement, 'error');
+        } finally {
+          isSaving = false; // 重置保存中標記
+        }
+      }
+    };
+
+
+    
+    // 檢查是否為排除視覺反饋的欄位（匯率、運費、抽成）
+    function isExcludedField(elementId) {
+      const excludedFields = ['exchange_rate', 'international_shipping', 'platform_commission_rate_n'];
+      return excludedFields.includes(elementId);
+    }
+
+    // 視覺反饋函數
+    function showDataChangeStatus(element, status) {
+      if (!element) return; // 如果沒有元素則不執行
+      
+      if (status === 'saved') {
+        element.style.border = '2px solid green';
+        element.style.boxShadow = '0 0 5px rgba(0, 255, 0, 0.3)';
+        // 保持顯示直到離開頁面，讓用戶知道修改了什麼
+      } else if (status === 'error') {
+        element.style.border = '2px solid red';
+        element.style.boxShadow = '0 0 5px rgba(255, 0, 0, 0.3)';
+        // 保持顯示直到離開頁面，讓用戶知道哪裡出錯
+      }
+    }
+
+    // 保存所有輸入框的初始值（頁面載入時的原始數據）
+    let initialInputValues = {};
+    
+    // 數字格式化函數：移除小數點後的0
+    function formatNumber(value, isInteger = false) {
+      if (value === '' || value === undefined || value === null) return '';
+      
+      const num = parseFloat(value);
+      if (isNaN(num)) return value;
+      
+      // 如果是整數格式（實際定價），直接返回整數
+      if (isInteger) {
+        return Math.round(num).toString();
+      }
+      
+      // 移除小數點後的0
+      if (num % 1 === 0) {
+        return num.toString(); // 整數直接返回，不帶小數點
+      } else {
+        return num.toFixed(2).replace(/\.?0+$/, ''); // 移除尾隨的0
+      }
+    }
+
+    // 統一的內地運費處理函數
+    function getFormattedInlandShipping(elementId = 'inland_shipping') {
+      const inlandShippingValue = getById(elementId).value;
+      return (!inlandShippingValue || parseFloat(inlandShippingValue) === 0) ? '無' : formatNumber(inlandShippingValue);
+    }
+
+    // 統一的價格處理函數：處理總價轉單價的邏輯
+    function processPurchasePrice(purchasePrice, priceUnit, quantity) {
+      let originalTotalPrice = '';
+      let processedPrice = purchasePrice;
+      
+      if (priceUnit === 'total' && quantity > 0) {
+        // 如果是總價模式且有數量，則轉換為單價
+        originalTotalPrice = formatNumber(purchasePrice);  // 保存原始總價
+        processedPrice = (parseFloat(purchasePrice) / quantity).toFixed(6);  // 使用高精度計算單價
+      }
+      
+      return {
+        processedPrice: processedPrice,
+        originalTotalPrice: originalTotalPrice
+      };
+    }
+
+    // 優化：計算函數緩存和DOM優化
+    let calculationCache = new Map();
+    let lastCalculationInputs = '';
+    let domElements = {}; // 緩存DOM元素
+    
+    function initCalculationElements() {
+      if (Object.keys(domElements).length === 0) {
+        domElements = {
+          productPrice: getById('product_price'),
+          purchaseQuantity: getById('purchase_quantity'),
+          exchangeRate: getById('exchange_rate'),
+          internationalShipping: getById('international_shipping'),
+          platformCommission: getById('platform_commission_rate_n'),
+          profitMargin: getById('profit_margin_rate_n'),
+          priceCurrency: getById('price_currency'),
+          priceUnit: getById('price_unit'),
+          shippingIncludedYes: getById('shipping_included_yes'),
+          inlandShipping: getById('inland_shipping'),
+          weightValue: getById('weight_value'),
+          weightUnit: getById('weight_unit'),
+          weightMode: getById('weight_mode'),
+          materialCount: getById('material_count'),
+          // Result elements
+          resultSingleWeight: getById('result_single_weight'),
+          resultTotalWeight: getById('result_total_weight'),
+          resultExtraMaterialFee: getById('result_extra_material_fee'),
+          resultSingleCost: getById('result_single_cost'),
+          resultTotalCost: getById('result_total_cost'),
+          suggestedPricing: getById('suggested_pricing'),
+          suggestedProfitLoss: getById('suggested_profit_loss'),
+          // Error elements
+          productPriceError: getById('product_price_error'),
+          purchaseQuantityError: getById('purchase_quantity_error'),
+          exchangeRateError: getById('exchange_rate_error')
+        };
+      }
+    }
+    
+    // 結果顯示更新函數
+    function updateResultDisplay(result) {
+      // 批量更新DOM以提升效能
+      if (result.singleWeight !== undefined) {
+        domElements.resultSingleWeight.innerText = result.singleWeight ? `單重：${result.singleWeight} Kg` : '';
+      }
+      if (result.totalWeight !== undefined) {
+        domElements.resultTotalWeight.innerText = result.totalWeight ? `總重：${result.totalWeight} Kg` : '';
+      }
+      if (result.extraMaterialFee !== undefined) {
+        domElements.resultExtraMaterialFee.innerText = result.extraMaterialFee;
+      }
+      if (result.singleCost !== undefined) {
+        domElements.resultSingleCost.innerText = `單價：${result.singleCost} 元`;
+      }
+      if (result.totalCost !== undefined) {
+        domElements.resultTotalCost.innerText = `總成本：${result.totalCost} 元`;
+      }
+      if (result.suggestedPricing !== undefined) {
+        domElements.suggestedPricing.innerText = `${result.suggestedPricing} 元`;
+      }
+      if (result.finalProfit !== undefined) {
+        domElements.suggestedProfitLoss.innerText = `${result.finalProfit} 元`;
+      }
+    }
+
+    const calculate = () => {
+      try {
+        initCalculationElements();
+        
+        // 批量清除錯誤訊息 - 優化DOM操作
+        const errorElements = document.querySelectorAll('.error-message');
+        const formulaErrorElements = document.querySelectorAll('.formula-error');
+        errorElements.forEach(span => (span.innerText = ''));
+        formulaErrorElements.forEach(span => (span.innerText = ''));
+        
+        // 確保結果區域始終顯示
+        resultArea.style.display = 'block';
+
+        // 快速獲取輸入值並生成緩存鍵
+        const inputs = {
+          productPrice: parseFloat(domElements.productPrice.value) || 0,
+          purchaseQuantity: parseFloat(domElements.purchaseQuantity.value) || 0,
+          exchangeRate: parseFloat(domElements.exchangeRate.value) || 0,
+          internationalShipping: parseFloat(domElements.internationalShipping.value) || 0,
+          platformCommission: parseFloat(domElements.platformCommission.value) || 0,
+          profitMargin: parseFloat(domElements.profitMargin.value) || 0,
+          currency: domElements.priceCurrency.value,
+          priceUnit: domElements.priceUnit.value,
+          shippingIncluded: domElements.shippingIncludedYes.checked,
+          inlandShipping: (domElements.shippingIncludedYes.checked && domElements.priceUnit.value !== 'total') ? (parseFloat(domElements.inlandShipping.value) || 0) : 0,
+          weightValue: parseFloat(domElements.weightValue.value) || 0,
+          weightUnit: domElements.weightUnit.value,
+          weightMode: domElements.weightMode.value,
+          materialCount: parseInt(domElements.materialCount.value) || 0
+        };
+        
+        // 生成緩存鍵
+        const inputsKey = JSON.stringify(inputs);
+        
+        // 檢查緩存
+        if (inputsKey === lastCalculationInputs && calculationCache.has(inputsKey)) {
+          const cachedResult = calculationCache.get(inputsKey);
+          updateResultDisplay(cachedResult);
+          return;
+        }
+
+        // 初始化計算變數
+        let singleCost = 0, totalCost = 0;
+
+        // 驗證必要數值
+        if (isNaN(inputs.productPrice) || inputs.productPrice < 0) {
+          domElements.productPriceError.innerText = '請輸入有效的價格';
+          return;
+        }
+
+        if (isNaN(inputs.purchaseQuantity) || inputs.purchaseQuantity < 0) {
+          domElements.purchaseQuantityError.innerText = '請輸入有效的數量';
+          return;
+        }
+
+        // 對於 CNY 模式，檢查是否有必要的設定值
+        if (inputs.currency === 'CNY') {
+          if (inputs.exchangeRate === 0) {
+            domElements.exchangeRateError.innerText = '請輸入採購匯率';
+            return;
+          }
+        }
+
+        // 進行計算
+        let calculationResult = {};
+        
+        if (inputs.currency === 'CNY') {
+          // CNY 模式計算
+          // 計算總成本
+          const totalProductCost = inputs.priceUnit === 'unit' ?
+            inputs.productPrice * inputs.purchaseQuantity :
+            inputs.productPrice;
+
+          const costAfterExchange = (totalProductCost + inputs.inlandShipping) * inputs.exchangeRate;
+
+          // 重量計算
+          const weightUnitFactor = inputs.weightUnit === 'kg' ? 1 : 0.001;
+          const rawWeightValInKg = inputs.weightValue * weightUnitFactor;
+          const finalWeightVal = inputs.weightMode === 'single' ?
+            rawWeightValInKg * inputs.purchaseQuantity :
+            rawWeightValInKg;
+
+          // 材積計算
+          let extraShippingFee = 0;
+          if (inputs.materialCount > 6) {
+            extraShippingFee = (inputs.materialCount - 6) * 25;
+          }
+
+          // 國際運費計算
+          const internationalShippingTotal = (finalWeightVal * inputs.internationalShipping) + extraShippingFee;
+
+          // 最終成本計算
+          totalCost = costAfterExchange + internationalShippingTotal;
+          singleCost = inputs.purchaseQuantity > 0 ? totalCost / inputs.purchaseQuantity : totalCost;
+
+          // 設置CNY模式的結果 - 重量使用高精度計算，顯示時四捨五入到2位小數
+          const calculatedSingleWeight = finalWeightVal / (inputs.purchaseQuantity || 1);
+          
+          // 更新全局高精度重量數據
+          currentPreciseWeights.singleWeight = calculatedSingleWeight.toFixed(6);
+          currentPreciseWeights.totalWeight = finalWeightVal.toFixed(6);
+          
+          calculationResult = {
+            singleWeight: formatNumber(calculatedSingleWeight),  // 移除尾隨0
+            totalWeight: formatNumber(finalWeightVal),           // 移除尾隨0
+            extraMaterialFee: inputs.materialCount > 6 ? `計材：${formatNumber(extraShippingFee)} 元` : '',
+            singleCost: formatNumber(singleCost),
+            totalCost: formatNumber(totalCost)
+          };
+        } else {
+          // NTD 模式計算
+          if (inputs.priceUnit === 'unit') {
+            singleCost = inputs.productPrice;
+            totalCost = inputs.productPrice * inputs.purchaseQuantity;
+          } else {
+            totalCost = inputs.productPrice;
+            singleCost = inputs.purchaseQuantity > 0 ? inputs.productPrice / inputs.purchaseQuantity : 0;
+          }
+          
+          // NTD模式下清除重量數據
+          currentPreciseWeights.singleWeight = null;
+          currentPreciseWeights.totalWeight = null;
+          
+          // 設置NTD模式的結果
+          calculationResult = {
+            singleWeight: '',
+            totalWeight: '',
+            extraMaterialFee: '',
+            singleCost: formatNumber(singleCost),
+            totalCost: formatNumber(totalCost)
+          };
+        }
+
+        // 計算建議定價和損益
+        const commissionRate = inputs.platformCommission / 100;
+        const suggestedPricing = singleCost / (1 - commissionRate);
+        const platformCommission = inputs.profitMargin * commissionRate;
+        const finalProfit = inputs.profitMargin - platformCommission - singleCost;
+
+        // 完整的計算結果
+        calculationResult.suggestedPricing = formatNumber(suggestedPricing);
+        calculationResult.finalProfit = Math.round(finalProfit).toString(); // 定價損益四捨五入到整數
+        
+        // 緩存結果
+        calculationCache.set(inputsKey, calculationResult);
+        lastCalculationInputs = inputsKey;
+        
+        // 限制緩存大小
+        if (calculationCache.size > 100) {
+          const firstKey = calculationCache.keys().next().value;
+          calculationCache.delete(firstKey);
+        }
+        
+        // 更新顯示
+        updateResultDisplay(calculationResult);
+
+        // 如果是編輯模式，更新數據
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('mode') && params.get('mode') === 'edit') {
+          // 從全局變量獲取高精度的單重數據（總重由系統自動計算，不需保存）
+          const singleWeight = currentPreciseWeights.singleWeight ? 
+            parseFloat(currentPreciseWeights.singleWeight) : '';
+          
+          // 處理內地運費
+          const inlandShipping = getFormattedInlandShipping();
+
+          // 處理採購價格（總價轉單價）
+          let purchasePrice = getById('product_price').value;
+          const priceUnit = getById('price_unit').value;
+          const quantity = parseFloat(getById('purchase_quantity').value) || 0;
+          const priceResult = processPurchasePrice(purchasePrice, priceUnit, quantity);
+          purchasePrice = priceResult.processedPrice;
+          const originalTotalPrice = priceResult.originalTotalPrice;
+          
+          const currentData = {
+            name: getById('pageTitle').textContent,
+            currency: getById('price_currency').value,
+            purchasePrice: parseFloat(purchasePrice).toFixed(6),  // 使用高精度保存單價
+            purchasePriceDisplay: formatNumber(purchasePrice),  // 顯示用2位小數
+            priceUnit: priceUnit,  // 保存價格單位模式
+            originalTotalPrice: originalTotalPrice,  // 保存原始總價（如果是總價模式）
+            quantity: parseInt(quantity),
+            inlandShipping: inlandShipping,
+            // 只儲存單重，總重由系統根據單重×數量自動計算
+            singleWeight: singleWeight ? parseFloat(singleWeight).toFixed(6) : '',  // 改為6位小數
+            singleWeightDisplay: singleWeight ? formatNumber(singleWeight) : '',  // 顯示用2位小數
+            materialCount: parseInt(getById('material_count').value) || 0,
+            actualPrice: getById('profit_margin_rate_n').value ? formatNumber(getById('profit_margin_rate_n').value, true) : '',
+            singleCost: getById('result_single_cost').textContent.replace('單價：', '').replace(' 元', ''),
+            totalCost: getById('result_total_cost').textContent.replace('總成本：', '').replace(' 元', ''),
+            suggestedPrice: getById('suggested_pricing').textContent.replace(' 元', ''),
+            profitLoss: getById('suggested_profit_loss').textContent.replace(' 元', ''),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          };
+
+          localStorage.setItem('updatedProductData', JSON.stringify(currentData));
+          
+          if (window.opener && !window.opener.closed) {
+            window.opener.postMessage({
+              type: 'calculationComplete',
+              product: currentData
+            }, '*');
+          }
+        }
+
+      } catch (error) {
+        console.error("Error in calculate function:", error);
+        resultArea.style.display = 'block';
+        getById('result_single_cost').innerText = '計算錯誤';
+        getById('result_total_cost').innerText = '請檢查輸入值';
+        getById('suggested_pricing').innerText = '計算錯誤';
+        getById('suggested_profit_loss').innerText = '請檢查輸入值';
+      }
+    };
+
+    // 依幣別切換顯示欄位
+    const handleCurrencyMode = async () => {
+      // 檢查是否為編輯模式
+      const params = new URLSearchParams(window.location.search);
+      const isEditMode = params.has('mode') && params.get('mode') === 'edit';
+      
+      // 編輯模式下強制使用 CNY
+      if (isEditMode) {
+        getById('price_currency').value = 'CNY';
+        getById('price_currency').disabled = true;
+        getById('price_currency').style.opacity = '0.5';
+        getById('price_currency').style.cursor = 'not-allowed';
+        getById('price_currency').style.backgroundColor = 'rgba(128, 128, 128, 0.1)';
+        getById('price_currency').title = '編輯模式下無法修改幣別';
+        
+        // 編輯模式下隱藏保存按鈕
+        const saveButton = document.querySelector('button[onclick="saveToFirestore()"]');
+        if (saveButton) {
+          saveButton.style.display = 'none';
+        }
+      } else {
+        getById('price_currency').disabled = false;
+        getById('price_currency').style.opacity = '1';
+        getById('price_currency').style.cursor = 'pointer';
+        getById('price_currency').style.backgroundColor = '';
+        getById('price_currency').title = '';
+      }
+
+      const isCNY = getById('price_currency').value === 'CNY';
+      const priceUnit = getById('price_unit').value;
+      const isTotalPrice = priceUnit === 'total';
+      
+      // 控制標題的可編輯性
+      const pageTitle = getById('pageTitle');
+      if (isCNY) {
+        pageTitle.contentEditable = 'true';
+        pageTitle.style.cursor = 'text';
+      } else {
+        pageTitle.contentEditable = 'false';
+        pageTitle.style.cursor = 'pointer';
+      }
+
+      // 定義需要隱藏的欄位（根據模式動態調整）
+      let fieldsToHide = [];
+
+      // NTD 模式下隱藏所有 CNY 相關選項
+      if (!isCNY) {
+        fieldsToHide = [
+          'shipping_included_yes',
+          'shipping_included_no',
+          'weight_value',
+          'weight_mode',
+          'weight_unit',
+          'material_count',
+          'exchange_rate',
+          'international_shipping',
+          'inland_shipping'
+        ];
+      } else if (isCNY && isTotalPrice) {
+        // CNY 總價模式下只隱藏郵費選項，其他都保留
+        fieldsToHide = ['shipping_included_yes', 'shipping_included_no', 'inland_shipping'];
+        // 總價模式下強制設定為無郵費
+        getById('shipping_included_no').checked = true;
+        getById('inland_shipping').value = '';
+      }
+
+      // 定義需要顯示的欄位（NTD 模式下）
+      const fieldsToShow = [
+        'product_price',
+        'purchase_quantity',
+        'platform_commission_rate_n',
+        'profit_margin_rate_n'
+      ];
+
+      // 處理所有欄位的顯示/隱藏
+      if (isCNY) {
+        // CNY 模式下先顯示所有相關欄位
+        ['weight_value', 'weight_mode', 'weight_unit', 'material_count', 'exchange_rate', 'international_shipping', 'inland_shipping'].forEach(fieldId => {
+          const field = getById(fieldId);
+          if (field) {
+            if (fieldId === 'weight_value') {
+              field.parentElement.style.display = 'flex'; // weight-input-group
+            } else if (fieldId === 'material_count') {
+              field.parentElement.style.display = 'flex'; // material-input-group
+            } else {
+              field.style.display = 'block';
+            }
+          }
+        });
+
+        // CNY 模式下先顯示郵費選項（單價模式需要，總價模式下面會再隱藏）
+        const radioGroup = document.querySelector('.radio-group');
+        if (radioGroup) {
+          radioGroup.style.display = 'flex';
+        }
+        
+        // 顯示郵費選項的單選按鈕
+        ['shipping_included_yes', 'shipping_included_no'].forEach(fieldId => {
+          const field = getById(fieldId);
+          if (field && field.parentElement) {
+            field.parentElement.style.display = 'inline-flex';
+          }
+        });
+      }
+
+      // 處理需要隱藏的欄位
+      fieldsToHide.forEach(fieldId => {
+        const field = getById(fieldId);
+        if (field) {
+          if (field.type === 'radio') {
+            field.parentElement.style.display = 'none';
+          } else if (fieldId.includes('weight_') && fieldId !== 'weight_value') {
+            // weight_mode, weight_unit 等選擇框
+            field.parentElement.style.display = 'none';
+          } else if (fieldId === 'weight_value') {
+            field.parentElement.style.display = 'none'; // weight-input-group
+          } else if (fieldId === 'material_count') {
+            field.parentElement.style.display = 'none'; // material-input-group
+          } else {
+            field.style.display = 'none';
+          }
+        }
+      });
+
+      // 再次處理郵費選項組 - 如果在隱藏列表中就隱藏
+      const radioGroup = document.querySelector('.radio-group');
+      if (radioGroup) {
+        const shouldHideShipping = fieldsToHide.includes('shipping_included_yes') || fieldsToHide.includes('shipping_included_no');
+        if (shouldHideShipping) {
+          radioGroup.style.display = 'none';
+        }
+      }
+
+      // 處理標籤的顯示/隱藏
+      document.querySelectorAll('.card label').forEach(label => {
+        const fieldId = label.getAttribute('for');
+        if (fieldId) {
+          if (isCNY) {
+            // CNY 模式下根據是否在隱藏列表決定顯示
+            label.style.display = fieldsToHide.includes(fieldId) ? 'none' : 'block';
+          } else {
+            // NTD 模式下只顯示基本欄位
+            label.style.display = fieldsToShow.includes(fieldId) ? 'block' : 'none';
+          }
+        }
+      });
+
+      // 處理錯誤訊息的顯示/隱藏
+      document.querySelectorAll('.error-message, .formula-error').forEach(error => {
+        const fieldId = error.id.replace('_error', '').replace('_formula_error', '');
+        if (isCNY) {
+          // CNY 模式下根據是否在隱藏列表決定顯示
+          error.style.display = fieldsToHide.includes(fieldId) ? 'none' : '';
+        } else {
+          // NTD 模式下只顯示基本欄位的錯誤
+          error.style.display = fieldsToShow.includes(fieldId) ? '' : 'none';
+        }
+      });
+
+      // 處理結果區域的顯示
+      if (isCNY) {
+        // CNY 模式下顯示所有重量和材積相關的顯示
+        getById('result_single_weight').style.display = 'block';
+        getById('result_total_weight').style.display = 'block';
+        getById('result_extra_material_fee').style.display = 'block';
+        
+        // 顯示材積輸入組（但要檢查是否在隱藏列表中）
+        const materialInputGroup = document.querySelector('.material-input-group');
+        if (materialInputGroup && !fieldsToHide.includes('material_count')) {
+          materialInputGroup.style.display = 'flex';
+        }
+        
+        // 顯示所有按鈕（除非是編輯模式）
+        const params = new URLSearchParams(window.location.search);
+        const isEditMode = params.has('mode') && params.get('mode') === 'edit';
+        const saveButton = document.querySelector('button[onclick="saveToFirestore()"]');
+        if (saveButton) {
+          saveButton.style.display = isEditMode ? 'none' : 'block';
+        }
+        const viewButton = document.querySelector('button[onclick="viewInProducts()"]');
+        if (viewButton) {
+          viewButton.style.display = 'block';
+        }
+      } else {
+        // NTD 模式下清空並隱藏所有重量和材積相關的顯示
+        getById('result_extra_material_fee').innerText = '';
+        getById('result_single_weight').innerText = '';
+        getById('result_total_weight').innerText = '';
+        getById('result_single_weight').style.display = 'none';
+        getById('result_total_weight').style.display = 'none';
+        getById('result_extra_material_fee').style.display = 'none';
+        
+        // 隱藏保存按鈕，只顯示查看按鈕
+        const saveButton = document.querySelector('button[onclick="saveToFirestore()"]');
+        if (saveButton) {
+          saveButton.style.display = 'none';
+        }
+        const viewButton = document.querySelector('button[onclick="viewInProducts()"]');
+        if (viewButton) {
+          viewButton.style.display = 'block';
+        }
+      }
+
+      calculate();
+      
+      // 最後調用 handleShippingMode 確保內地運費的顯示狀態正確
+      handleShippingMode();
+    };
+
+    // 依是否需郵費切換內地運費欄位
+    const handleShippingMode = () => {
+      // 檢查當前是否為總價模式
+      const isTotalPrice = getById('price_unit').value === 'total';
+      const isCNY = getById('price_currency').value === 'CNY';
+      
+      // 總價模式下不顯示內地運費輸入框
+      if (isCNY && isTotalPrice) {
+        getById('inland_shipping').style.display = 'none';
+        getById('inland_shipping').value = '';
+        getById('inland_shipping').disabled = true;
+      } else if (getById('shipping_included_yes').checked) {
+        getById('inland_shipping').style.display = 'block';
+        getById('inland_shipping').disabled = false;
+        // 只有當前值為空或0時才設為空，否則保留現有值（用於編輯模式）
+        const currentValue = getById('inland_shipping').value;
+        if (!currentValue || currentValue === '0') {
+          getById('inland_shipping').value = ''; // 預設值設為空
+        }
+      } else {
+        getById('inland_shipping').style.display = 'none';
+        getById('inland_shipping').value = ''; // 設為空字符串，以確保隱藏時不顯示任何值
+        getById('inland_shipping').disabled = true;
+      }
+      
+      calculate();
+    };
+
+    // 動態建立跳欄順序
+    const getFlowOrder = () => {
+      // 檢查是否為編輯模式
+      const params = new URLSearchParams(window.location.search);
+      const isEditMode = params.has('mode') && params.get('mode') === 'edit';
+      
+      let flow = [
+        getById('product_price'),
+        getById('purchase_quantity')
+      ];
+
+      // 根據幣別和價格模式決定是否加入郵費選項
+      const isCNY = getById('price_currency').value === 'CNY';
+      const isTotalPrice = getById('price_unit').value === 'total';
+      
+      if (isCNY) {
+        // CNY 單價模式才加入郵費選項
+        if (!isTotalPrice && getById('shipping_included_yes').checked) {
+          flow.push(getById('inland_shipping'));
+        }
+
+        // CNY 模式下加入重量和材積選項（不管是單價還是總價模式）
+        flow.push(
+          getById('weight_value'),
+          getById('material_count'),
+          getById('exchange_rate'),
+          getById('international_shipping')
+        );
+      }
+
+      flow.push(
+        getById('platform_commission_rate_n'),
+        getById('profit_margin_rate_n')
+      );
+
+      // 過濾掉不可見或禁用的元素
+      return flow.filter(el => el && el.style.display !== 'none' && !el.disabled);
+    };
+
+    // 建立跳欄順序 & 綁定事件
+    const attachEnterKeyListeners = () => {
+      const flowOrder = getFlowOrder();
+      flowOrder.forEach((elem, index) => {
+        // 檢查是否已經綁定過事件監聽器，避免重複綁定
+        if (elem._listenersAttached) return;
+        elem._listenersAttached = true;
+        
+          // 新增：處理輸入事件
+          if (elem.type === 'text') {
+            // 檢查是否為商品名稱輸入框（不需要限制）
+            const isProductNameInput = elem.id === 'productNameInput';
+            
+            // 防抖計算函數
+            const debouncedCalculate = debounce(() => {
+              calculate();
+            }, 100);
+            
+            // 限制輸入為數字和小數點的函數
+            const restrictToNumbers = (value) => {
+              // 只保留數字和小數點
+              // 允許：數字 0-9、小數點（但只能有一個小數點）
+              let filtered = value.replace(/[^\d.]/g, '');
+              // 確保只有一個小數點
+              const parts = filtered.split('.');
+              if (parts.length > 2) {
+                filtered = parts[0] + '.' + parts.slice(1).join('');
+              }
+              return filtered;
+            };
+            
+            elem.addEventListener('input', e => {
+              // 如果不是商品名稱輸入框，限制為數字和小數點
+              if (!isProductNameInput) {
+                const originalValue = e.target.value;
+                const restrictedValue = restrictToNumbers(originalValue);
+                if (originalValue !== restrictedValue) {
+                  e.target.value = restrictedValue;
+                  return; // 如果值被修改，不繼續處理
+                }
+              }
+              
+              let value = e.target.value;
+              // 如果第一位是0且後面有數字，去掉0
+              if (value.length > 1 && value[0] === '0' && /^[1-9]/.test(value[1])) {
+                e.target.value = value.substring(1);
+              }
+              // 如果是材積欄位，調用特殊處理函數
+              if (elem.id === 'material_count') {
+                handleMaterialInput();
+              }
+              // 防抖計算
+              debouncedCalculate();
+              // 編輯模式下觸發自動保存
+              if (!isExcludedField(e.target.id)) {
+                lastChangedElement = e.target;
+              }
+              autoSaveInEditMode();
+            });
+            
+            // 處理貼上事件：如果包含非數字數據就不提供貼上
+            if (!isProductNameInput) {
+              elem.addEventListener('paste', e => {
+                e.preventDefault();
+                const paste = (e.clipboardData || window.clipboardData).getData('text');
+                
+                // 檢查貼上的內容是否只包含數字和小數點
+                // 使用正則表達式：只允許數字和小數點，且小數點最多一個
+                const isValidNumber = /^[\d.]+$/.test(paste) && (paste.split('.').length <= 2);
+                
+                // 如果包含非數字數據，完全阻止貼上
+                if (!isValidNumber || !paste.trim()) {
+                  return; // 不執行任何操作，阻止貼上
+                }
+                
+                // 如果只包含數字和小數點，才允許貼上
+                const start = e.target.selectionStart || 0;
+                const end = e.target.selectionEnd || 0;
+                const currentValue = e.target.value;
+                
+                // 檢查插入後是否會導致多個小數點
+                const beforeDecimal = currentValue.substring(0, start).includes('.');
+                const afterDecimal = currentValue.substring(end).includes('.');
+                const pasteHasDecimal = paste.includes('.');
+                
+                // 如果當前值已經有小數點，且貼上的內容也包含小數點，阻止貼上
+                if ((beforeDecimal || afterDecimal) && pasteHasDecimal) {
+                  return; // 阻止貼上
+                }
+                
+                // 允許貼上
+                const newValue = currentValue.substring(0, start) + paste + currentValue.substring(end);
+                e.target.value = restrictToNumbers(newValue);
+                
+                // 設置游標位置
+                const newCursorPos = start + paste.length;
+                setTimeout(() => {
+                  e.target.setSelectionRange(newCursorPos, newCursorPos);
+                }, 0);
+                
+                // 觸發 input 事件以觸發計算
+                e.target.dispatchEvent(new Event('input', { bubbles: true }));
+              });
+            }
+
+          // 新增：處理失焦事件
+          elem.addEventListener('blur', e => {
+            // 使用setTimeout確保在其他事件處理完成後執行
+            setTimeout(() => {
+              let value = e.target.value.trim();
+              
+              // 如果沒有填入新數據，恢復到初始值（不觸發保存）
+              if (value === '') {
+                const initialValue = initialInputValues[e.target.id] || '';
+                e.target.value = initialValue;
+                calculate();
+                // 注意：恢復原值不觸發保存，因為數據沒有變更
+                return;
+              }
+              
+              // 格式化數字（移除尾隨0或轉為整數）
+              if (value && !isNaN(parseFloat(value))) {
+                const isActualPrice = e.target.id === 'profit_margin_rate_n';
+                e.target.value = formatNumber(value, isActualPrice);
+              }
+              
+              // 如果有填入新數據，觸發自動保存
+              if (!isExcludedField(e.target.id)) {
+                lastChangedElement = e.target;
+              }
+              autoSaveInEditMode();
+            }, 10); // 短暫延遲確保事件執行順序
+          });
+
+          // 保存初始值（頁面載入時的原始數據）
+          if (initialInputValues[elem.id] === undefined) {
+            initialInputValues[elem.id] = elem.value || '';
+          }
+
+          // 修改：處理聚焦事件 - 進入輸入框時清空數據（包括點擊、Tab跳轉等）
+          elem.addEventListener('focus', e => {
+            // 如果正在恢復狀態，不清空輸入框
+            if (activeInputState.isRestoring) {
+              return;
+            }
+            
+            // 只有當輸入框有內容時才清空（用戶主動點擊時）
+            if (e.target.value.trim() !== '') {
+              // 進入輸入框時清空（不保存任何東西）
+              e.target.value = '';
+              // 清除相關的錯誤訊息
+              const errorSpan = getById(elem.id + '_error');
+              const formulaErrorSpan = getById(elem.id + '_formula_error');
+              if (errorSpan) errorSpan.innerText = '';
+              if (formulaErrorSpan) formulaErrorSpan.innerText = '';
+              // 觸發計算更新
+              calculate();
+            }
+            // 注意：此時不觸發自動保存，因為此時只是清空輸入框
+          });
+
+          // 修改：統一的鍵盤事件處理器（合併所有 keydown 處理邏輯）
+          elem.addEventListener('keydown', event => {
+            // 檢查是否為商品名稱輸入框（不需要限制）
+            const isProductNameInput = elem.id === 'productNameInput';
+            
+            // 如果不是商品名稱輸入框，限制只能輸入數字和小數點
+            if (!isProductNameInput && elem.type === 'text') {
+              // 允許的特殊鍵：Backspace, Delete, Tab, Enter, Escape, Arrow keys, Home, End
+              const allowedKeys = [
+                'Backspace', 'Delete', 'Tab', 'Enter', 'Escape',
+                'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+                'Home', 'End', 'Control', 'Meta', 'Alt'
+              ];
+              
+              // 如果按下的是特殊鍵，允許
+              if (allowedKeys.includes(event.key)) {
+                // 允許這些鍵的正常行為
+              }
+              // 如果按下的是數字或小數點，允許
+              else if (/^\d$/.test(event.key) || event.key === '.') {
+                // 如果輸入小數點，檢查是否已經有小數點
+                if (event.key === '.') {
+                  const currentValue = event.target.value;
+                  if (currentValue.includes('.')) {
+                    event.preventDefault();
+                    return;
+                  }
+                }
+                // 允許輸入數字和小數點
+              }
+              // 如果按下 Ctrl/Cmd + A/C/V/X，允許（用於全選、複製、貼上、剪下）
+              else if ((event.ctrlKey || event.metaKey) && ['a', 'c', 'v', 'x'].includes(event.key.toLowerCase())) {
+                // 允許這些快捷鍵（貼上會在 paste 事件中處理）
+              }
+              // 其他按鍵都阻止
+              else {
+                event.preventDefault();
+                return;
+              }
+            }
+            
+            // 處理上下鍵事件
+            if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+              event.preventDefault();
+              event.stopPropagation();
+              let value = parseFloat(event.target.value);
+              if (isNaN(value)) value = 0;
+              
+              value = value + (event.key === 'ArrowUp' ? 1 : -1);
+              
+              // 確保值不會小於0
+              if (value < 0) value = 0;
+              
+              // 根據欄位ID決定小數位數
+              let decimalPlaces = 0;
+              if (elem.id === 'exchange_rate') {
+                decimalPlaces = 2;
+              } else if (elem.id === 'platform_commission_rate_n') {
+                decimalPlaces = 1;
+              } else if (elem.id === 'profit_margin_rate_n') {
+                // 實際定價使用整數格式
+                decimalPlaces = 0;
+              }
+              
+              if (elem.id === 'profit_margin_rate_n') {
+                event.target.value = Math.round(value).toString();
+              } else {
+                event.target.value = formatNumber(value.toFixed(decimalPlaces));
+              }
+              calculate();
+              // 編輯模式下觸發自動保存
+              if (!isExcludedField(event.target.id)) {
+                lastChangedElement = event.target;
+              }
+              autoSaveInEditMode();
+              return;
+            }
+            
+            // 處理 Enter 鍵事件
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              if (elem.type === 'text') {
+                const formula = elem.value.trim();
+                if (!formula) {
+                  elem.value = '';
+                  const formulaError = getById(elem.id + '_formula_error');
+                  if (formulaError) formulaError.innerText = '';
+                } else {
+                  const result = evaluateFormula(formula);
+                  if (!isNaN(result)) {
+                    elem.value = result;
+                    const formulaError = getById(elem.id + '_formula_error');
+                    if (formulaError) formulaError.innerText = '';
+                  } else {
+                    const formulaError = getById(elem.id + '_formula_error');
+                    if (formulaError) formulaError.innerText = '請輸入正確數值';
+                  }
+                }
+              }
+              // 注意：Enter確認輸入時觸發保存
+              calculate();
+              // 編輯模式下觸發自動保存
+              if (!isExcludedField(elem.id)) {
+                lastChangedElement = elem;
+              }
+              autoSaveInEditMode();
+              const nextIndex = (index + 1) % flowOrder.length;
+              flowOrder[nextIndex].focus();
+              return;
+            }
+            
+            // 處理 Escape 鍵事件
+            if (event.key === 'Escape') {
+              // 按ESC鍵恢復到初始值（不觸發保存）
+              const initialValue = initialInputValues[elem.id] || '';
+              elem.value = initialValue;
+              calculate();
+              // 注意：恢復原值不觸發保存，因為數據沒有變更
+              elem.blur(); // 失去焦點
+              return;
+            }
+            
+            // 處理 Tab 鍵事件
+            if (event.key === 'Tab') {
+              // Tab 鍵跳轉時的處理邏輯
+              const value = elem.value.trim();
+              
+              if (value === '') {
+                // 如果沒有輸入內容，恢復到初始值（不觸發保存）
+                const initialValue = initialInputValues[elem.id] || '';
+                elem.value = initialValue;
+                calculate();
+                // 注意：恢復原值不觸發保存，因為數據沒有變更
+              } else {
+                // 如果有輸入新數據，觸發自動保存
+                if (!isExcludedField(elem.id)) {
+                  lastChangedElement = elem;
+                }
+                autoSaveInEditMode();
+              }
+              
+              // 正常進行Tab跳轉（不阻止默認行為）
+              return;
+            }
+            
+            // 處理 Backspace 和 Delete 鍵事件
+            if (event.key === 'Backspace' || event.key === 'Delete') {
+              if (elem.type === 'text') {
+                elem.value = '';
+                const formulaError = getById(elem.id + '_formula_error');
+                if (formulaError) formulaError.innerText = '';
+                calculate();
+                // 編輯模式下觸發自動保存
+                if (!isExcludedField(elem.id)) {
+                  lastChangedElement = elem;
+                }
+                autoSaveInEditMode();
+              }
+            }
+          });
+        }
+      });
+    };
+
+    // 修改：處理材積輸入事件
+    const handleMaterialInput = () => {
+      const materialCount = parseFloat(getById('material_count').value) || 6;
+      const normalLabel = document.querySelector('.material-normal');
+      const extraLabel = document.querySelector('.material-extra');
+
+      if (materialCount <= 6) {
+        normalLabel.classList.add('active');
+        extraLabel.classList.remove('active');
+      } else {
+        normalLabel.classList.remove('active');
+        extraLabel.classList.add('active');
+      }
+    };
+
+    // 修改：檢查是否為編輯模式
+    const checkEditMode = async () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('mode') && params.get('mode') === 'edit') {
+        try {
+          // 解碼並解析數據
+          const editData = JSON.parse(decodeURIComponent(params.get('data')));
+          
+          // 設置標題
+          getById('pageTitle').textContent = editData.name || '計算機';
+          
+          // 設置幣別
+          const currencySelect = getById('price_currency');
+          currencySelect.value = editData.currency || 'CNY';
+          
+          // 設置價格和價格模式
+          if (editData.priceUnit === 'total' && editData.originalTotalPrice) {
+            // 如果原本是總價模式，恢復總價
+            getById('price_unit').value = 'total';
+            getById('product_price').value = editData.originalTotalPrice;
+          } else {
+            // 單價模式，使用高精度的單價（如果有）或顯示用的單價
+            getById('price_unit').value = 'unit';
+            const purchasePrice = editData.purchasePrice || editData.purchasePriceDisplay;
+            if (purchasePrice) {
+              getById('product_price').value = formatNumber(purchasePrice);
+            }
+          }
+          
+          // 設置其他字段
+          if (editData.quantity) {
+            getById('purchase_quantity').value = parseInt(editData.quantity);
+          }
+          
+          // 處理內地運費：先設置值，再設置單選按鈕狀態
+          if (editData.inlandShipping && parseFloat(editData.inlandShipping) > 0) {
+            // 先設置內地運費的值
+            getById('inland_shipping').value = formatNumber(editData.inlandShipping);
+            // 再設置單選按鈕為"需郵費"
+            getById('shipping_included_yes').checked = true;
+          } else {
+            // 設置為"無郵費"
+            getById('shipping_included_no').checked = true;
+            getById('inland_shipping').value = '';
+          }
+          
+          // 調用 handleShippingMode 來確保內地運費輸入框的顯示狀態正確
+          handleShippingMode();
+          
+          // 編輯模式下強制使用單重模式
+          getById('weight_mode').value = 'single';
+          
+          // 優先使用單重數據（新版本），如果沒有則從總重計算（向後兼容）
+          if (editData.singleWeight) {
+            // 直接使用單重數據（推薦方式）
+            getById('weight_value').value = formatNumber(editData.singleWeight);
+          } else if (editData.totalWeight && editData.quantity) {
+            // 從總重計算單重（向後兼容舊數據）
+            const totalWeightValue = parseFloat(editData.totalWeight);
+            const quantityValue = parseInt(editData.quantity);
+            
+            const singleWeightValue = totalWeightValue / quantityValue;
+            getById('weight_value').value = formatNumber(singleWeightValue);
+            
+            // 在內部記錄實際的高精度單重
+            getById('weight_value').dataset.actualSingleWeight = singleWeightValue;
+          }
+          if (editData.materialCount) {
+            getById('material_count').value = parseInt(editData.materialCount);
+            handleMaterialInput();
+          }
+          
+          // 編輯模式下載入Firebase設定作為預設值
+          try {
+            // 從Firebase載入全局設定作為預設值
+            const settingsDoc = await db.collection('settings').doc('global').get();
+            if (settingsDoc.exists) {
+              const settings = settingsDoc.data();
+              getById('exchange_rate').value = settings.exchangeRate || '4.5';
+              getById('international_shipping').value = settings.internationalShipping || '15';
+              getById('platform_commission_rate_n').value = settings.platformCommission || '5';
+            } else {
+              // 如果Firebase中沒有設定，使用固定預設值
+              getById('exchange_rate').value = '4.5';
+              getById('international_shipping').value = '15';
+              getById('platform_commission_rate_n').value = '5';
+            }
+          } catch (error) {
+            console.error("Error loading settings as default values in edit mode:", error);
+            // 載入失敗時使用固定預設值
+            getById('exchange_rate').value = '4.5';
+            getById('international_shipping').value = '15';
+            getById('platform_commission_rate_n').value = '5';
+          }
+          
+          if (editData.actualPrice) {
+            getById('profit_margin_rate_n').value = formatNumber(editData.actualPrice, true);
+          }
+
+          // 編輯模式下這些欄位也可以編輯用於計算
+          document.body.classList.add('edit-mode');
+
+          // 觸發幣別模式處理（但不會清空已設置的值）
+          handleCurrencyMode();
+          
+          // 觸發計算
+          calculate();
+        } catch (e) {
+          console.error('Error parsing edit data:', e);
+          alert('載入編輯數據時發生錯誤');
+        }
+      }
+    }
+
+    // 標題編輯相關變數
+    let originalTitle = '';
+    let isTitleEditing = false;
+
+    // 標題編輯事件處理
+    const pageTitle = getById('pageTitle');
+    
+    // 點擊事件
+    pageTitle.addEventListener('click', function(e) {
+      // 檢查是否為 NTD 模式
+      const isNTD = getById('price_currency').value === 'NTD';
+      // 檢查是否為編輯模式
+      const params = new URLSearchParams(window.location.search);
+      const isEditMode = params.has('mode') && params.get('mode') === 'edit';
+      
+      if (isNTD) {
+        // NTD 模式下重新整理頁面
+        window.location.reload();
+      } else if (!isTitleEditing && !isEditMode) {
+        // CNY 模式且非編輯模式下保持原有的編輯功能（清空內容）
+        originalTitle = this.textContent;
+        this.innerHTML = '';
+        isTitleEditing = true;
+        // 將游標移到最後
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(this);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } else if (isEditMode && !isTitleEditing) {
+        // 編輯模式下不清空內容，只進入編輯狀態
+        originalTitle = this.textContent;
+        isTitleEditing = true;
+        // 將游標移到最後
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(this);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    });
+
+    // 鍵盤事件
+    pageTitle.addEventListener('keydown', function(e) {
+      if (!isTitleEditing) return;
+
+      switch(e.key) {
+        case 'Enter':
+          e.preventDefault();
+          if (this.textContent.trim() === '') {
+            this.innerHTML = originalTitle;
+          }
+          isTitleEditing = false;
+          
+          // 編輯模式下觸發自動保存（如果內容有變更）
+          const params = new URLSearchParams(window.location.search);
+          const isEditMode = params.has('mode') && params.get('mode') === 'edit';
+          if (isEditMode && this.textContent.trim() !== originalTitle) {
+            lastChangedElement = this; // 標題不在排除列表中
+            autoSaveInEditMode();
+          }
+          
+          this.blur();
+          break;
+        
+        case 'Delete':
+          e.preventDefault();
+          this.innerHTML = '';
+          // 將游標移到最後
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.selectNodeContents(this);
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+          break;
+        
+        case 'Backspace':
+          // 讓瀏覽器處理 Backspace，保持游標位置
+          break;
+      }
+    });
+
+    // 失焦事件
+    pageTitle.addEventListener('blur', function() {
+      if (isTitleEditing) {
+        if (this.textContent.trim() === '') {
+          this.innerHTML = originalTitle;
+        }
+        isTitleEditing = false;
+        
+        // 編輯模式下觸發自動保存（如果內容有變更）
+        const params = new URLSearchParams(window.location.search);
+        const isEditMode = params.has('mode') && params.get('mode') === 'edit';
+        if (isEditMode && this.textContent.trim() !== originalTitle) {
+          lastChangedElement = this; // 標題不在排除列表中
+          autoSaveInEditMode();
+        }
+      }
+    });
+
+
+
+    // 修改：保存到 Firestore
+    async function saveToFirestore() {
+      // 檢查是否為編輯模式
+      const params = new URLSearchParams(window.location.search);
+      const currentTitle = getById('pageTitle').textContent.trim();
+      
+      if (params.has('mode') && params.get('mode') === 'edit') {
+        // 編輯模式下直接保存
+        await confirmSave();
+      } else {
+        // 新增模式下檢查標題是否已更改
+        if (currentTitle === '商品名稱' || currentTitle === '') {
+          // 如果標題未更改或為空，顯示商品名稱輸入視窗
+          getById('nameModal').style.display = 'block';
+          getById('productNameInput').value = ''; // 預設為空白
+          getById('productNameInput').focus();
+        } else {
+          // 如果標題已更改，直接保存
+          await confirmSave();
+        }
+      }
+    }
+
+    // 修改：關閉商品名稱輸入視窗
+    function closeNameModal(forceClose = false) {
+      // 檢查是否有未保存的更改
+      const productNameInput = getById('productNameInput');
+      const currentName = productNameInput.value.trim();
+      
+      if (!forceClose && currentName && currentName !== getById('pageTitle').textContent) {
+        if (confirm('您有未保存的更改，確定要關閉嗎？')) {
+          getById('nameModal').style.display = 'none';
+          productNameInput.value = '';
+        }
+      } else {
+        getById('nameModal').style.display = 'none';
+        productNameInput.value = '';
+      }
+    }
+
+    // 修改：確認保存
+    async function confirmSave() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const isEditMode = params.has('mode') && params.get('mode') === 'edit';
+        const currentTitle = getById('pageTitle').textContent.trim();
+        
+        // 使用高精度的單重數據（總重由系統自動計算，不需保存）
+        const singleWeight = currentPreciseWeights.singleWeight ? 
+          parseFloat(currentPreciseWeights.singleWeight) : '';
+        
+        // 處理內地運費
+        const inlandShipping = getFormattedInlandShipping();
+
+        // 處理採購價格（總價轉單價）
+        let purchasePrice = getById('product_price').value;
+        const priceUnit = getById('price_unit').value;
+        const quantity = parseFloat(getById('purchase_quantity').value) || 0;
+        const priceResult = processPurchasePrice(purchasePrice, priceUnit, quantity);
+        purchasePrice = priceResult.processedPrice;
+        const originalTotalPrice = priceResult.originalTotalPrice;
+        
+        // 收集當前數據，確保所有數值都是正確的格式
+        const currentData = {
+          name: isEditMode ? currentTitle : (currentTitle !== '商品名稱' ? currentTitle : getById('productNameInput').value.trim()),
+          currency: getById('price_currency').value,
+          purchasePrice: parseFloat(purchasePrice).toFixed(6),  // 使用高精度保存單價
+          purchasePriceDisplay: formatNumber(purchasePrice),  // 顯示用2位小數
+          priceUnit: priceUnit,  // 保存價格單位模式
+          originalTotalPrice: originalTotalPrice,  // 保存原始總價（如果是總價模式）
+          quantity: parseInt(getById('purchase_quantity').value) || 0,
+          inlandShipping: inlandShipping,
+          // 只儲存單重，總重由系統根據單重×數量自動計算
+          singleWeight: singleWeight ? parseFloat(singleWeight).toFixed(6) : '',  // 改為6位小數
+          singleWeightDisplay: singleWeight ? formatNumber(singleWeight) : '',  // 顯示用2位小數
+          materialCount: parseInt(getById('material_count').value) || 0,
+          actualPrice: getById('profit_margin_rate_n').value ? formatNumber(getById('profit_margin_rate_n').value, true) : '',
+          singleCost: getById('result_single_cost').textContent.replace('單價：', '').replace(' 元', ''),
+          totalCost: getById('result_total_cost').textContent.replace('總成本：', '').replace(' 元', ''),
+          suggestedPrice: getById('suggested_pricing').textContent.replace(' 元', ''),
+          profitLoss: getById('suggested_profit_loss').textContent.replace(' 元', ''),
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if (!isEditMode && !currentData.name) {
+          alert('請輸入商品名稱');
+          return;
+        }
+
+        if (isEditMode) {
+          // 更新現有商品
+          const editData = JSON.parse(params.get('data'));
+          
+          // 檢查是否需要更新文檔ID（如果商品名稱變更且用戶確認）
+          const nameChanged = editData.name !== currentData.name;
+          if (nameChanged) {
+            const shouldUpdateDocId = confirm('商品名稱已變更，是否同時更新Firebase文檔ID以便管理？\n\n點選「確定」：更新文檔ID（推薦）\n點選「取消」：僅更新商品名稱');
+            
+            if (shouldUpdateDocId) {
+              // 更新文檔ID
+              const newDocId = generateSafeDocumentId(currentData.name);
+              
+              try {
+                // 建立新文檔
+                await db.collection('products').doc(newDocId).set(currentData);
+                
+                // 刪除舊文檔
+                await db.collection('products').doc(editData.id).delete();
+                
+                // 通知 Products.html 商品ID已變更
+                if (window.opener && !window.opener.closed) {
+                  window.opener.postMessage({
+                    type: 'updateProductId',
+                    oldId: editData.id,
+                    newId: newDocId,
+                    product: currentData
+                  }, '*');
+                }
+                
+                alert('商品名稱和文檔ID已成功更新！');
+              } catch (error) {
+                console.error('更新文檔ID時發生錯誤:', error);
+                // 如果失敗，回退到僅更新名稱
+                await db.collection('products').doc(editData.id).update(currentData);
+                
+                if (window.opener && !window.opener.closed) {
+                  window.opener.postMessage({
+                    type: 'updateProductName',
+                    productId: editData.id,
+                    newName: currentData.name
+                  }, '*');
+                }
+                
+                alert('文檔ID更新失敗，已回退到僅更新商品名稱');
+              }
+            } else {
+              // 僅更新商品資料，保持原文檔ID
+              await db.collection('products').doc(editData.id).update(currentData);
+              
+              if (window.opener && !window.opener.closed) {
+                window.opener.postMessage({
+                  type: 'updateProductName',
+                  productId: editData.id,
+                  newName: currentData.name
+                }, '*');
+              }
+            }
+          } else {
+            // 名稱未變更，正常更新
+            await db.collection('products').doc(editData.id).update(currentData);
+            
+            if (window.opener && !window.opener.closed) {
+              window.opener.postMessage({
+                type: 'updateProductName',
+                productId: editData.id,
+                newName: currentData.name
+              }, '*');
+            }
+          }
+          
+          // 返回商品總表
+          window.location.href = 'Products.html';
+        } else {
+          // 新增商品
+          // 生成安全的文檔ID（基於商品名稱）
+          const safeDocId = generateSafeDocumentId(currentData.name);
+          
+          try {
+            // 使用自訂文檔ID保存
+            await db.collection('products').doc(safeDocId).set(currentData);
+            
+            // 通知 Products.html 新增商品
+            if (window.opener && !window.opener.closed) {
+              window.opener.postMessage({
+                type: 'addNewProduct',
+                product: {
+                  id: safeDocId,
+                  ...currentData
+                }
+              }, '*');
+            }
+          } catch (error) {
+            // 如果文檔ID已存在，使用帶時間戳的版本
+            const timestampedId = `${safeDocId}_${Date.now()}`;
+            await db.collection('products').doc(timestampedId).set(currentData);
+            
+            // 通知 Products.html 新增商品
+            if (window.opener && !window.opener.closed) {
+              window.opener.postMessage({
+                type: 'addNewProduct',
+                product: {
+                  id: timestampedId,
+                  ...currentData
+                }
+              }, '*');
+            }
+          }
+          
+          // 清空表單
+          getById('pageTitle').textContent = '商品名稱';
+          getById('product_price').value = '';
+          getById('purchase_quantity').value = '';
+          getById('inland_shipping').value = '';
+          getById('weight_value').value = '';
+          getById('material_count').value = '';
+          getById('profit_margin_rate_n').value = '';
+          calculate();
+        }
+
+        // 關閉視窗時傳入 forceClose = true
+        closeNameModal(true);
+      } catch (error) {
+        console.error("Error saving to Firestore:", error);
+        alert("保存時發生錯誤");
+      }
+    }
+
+    // 生成安全的文檔ID（基於商品名稱）
+    function generateSafeDocumentId(productName) {
+      if (!productName || productName.trim() === '') {
+        return `product_${Date.now()}`;
+      }
+      
+      // 移除前後空格並轉換為小寫
+      let safeId = productName.trim();
+      
+      // 保留中文字符，替換特殊字符為底線
+      safeId = safeId.replace(/[\/\\\[\]{}()*+?.,^$|#\s]/g, '_');
+      
+      // 移除連續的底線
+      safeId = safeId.replace(/_+/g, '_');
+      
+      // 移除開頭和結尾的底線
+      safeId = safeId.replace(/^_+|_+$/g, '');
+      
+      // 如果處理後為空，使用預設名稱
+      if (!safeId) {
+        return `product_${Date.now()}`;
+      }
+      
+      // 確保長度不超過Firebase限制（最多1500字節，我們保守使用100字符）
+      if (safeId.length > 100) {
+        safeId = safeId.substring(0, 100);
+      }
+      
+      return safeId;
+    }
+
+    // 查看商品列表
+    function viewInProducts() {
+      window.location.href = 'Products.html';
+    }
+
+    // 採購匯率、國際運費、平台抽成的處理說明：
+    // 1. 預設值：從Firebase載入全局設定作為初始值
+    // 2. 可修改：使用者可以自由調整這些值進行計算
+    // 3. 不同步：修改的值不會保存回Firebase資料庫，僅供當前計算使用
+
+    // 監聽頁面可見性變化（用於保持輸入框狀態）
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        // 頁面隱藏時保存狀態
+        saveInputState();
+      } else {
+        // 頁面重新可見時恢復狀態
+        restoreInputState();
+      }
+    });
+
+    // 監聽窗口失焦事件（用於保持輸入框狀態）
+    window.addEventListener('blur', () => {
+      saveInputState();
+    });
+
+    // 監聽窗口重新獲得焦點事件（用於保持輸入框狀態）
+    window.addEventListener('focus', () => {
+      // 延遲恢復，確保頁面完全載入
+      setTimeout(() => {
+        restoreInputState();
+      }, 100);
+    });
+  </script>
+</body>
+</html>
