@@ -1054,10 +1054,6 @@
             .simplified-view td:nth-child(8) { width: 80px; min-width: 80px; } /* 定價損益 */
             .simplified-view th:nth-child(9), 
             .simplified-view td:nth-child(9) { width: 90px; min-width: 90px; } /* 定價總損益 */
-            .simplified-view th:nth-child(9), 
-            .simplified-view td:nth-child(9) { width: 90px; min-width: 90px; } /* 定價毛利率 */
-            .simplified-view th:nth-child(10), 
-            .simplified-view td:nth-child(10) { width: 90px; min-width: 90px; } /* 定價報酬率 */
         }
 
         /* 行動裝置滾動條優化 */
@@ -1694,8 +1690,8 @@
                 // 提交所有更新
                 await batch.commit();
                 
-                        // 重新初始化表格以顯示更新後的數據，並保持搜尋狀態
-        refreshTableWithSearchState();
+                // 重新初始化表格以顯示更新後的數據，並保持搜尋狀態
+                refreshTableWithSearchState();
             } catch (error) {
                 console.error("Error recalculating products:", error);
                 alert("重新計算商品數據時發生錯誤");
@@ -1723,8 +1719,8 @@
                         // 更新 Firestore
                         await db.collection('settings').doc('global').set(newSettings);
                         
-                                // 重新計算所有商品數據
-        await recalculateAllProducts();
+                        // 重新計算所有商品數據
+                        await recalculateAllProducts();
                     }
                 }
                 // 處理新增商品
@@ -2764,8 +2760,8 @@
 
                     // 添加鍵盤事件監聽器
                     input.addEventListener('keydown', async function(e) {
-                        // 處理 Backspace 和 Delete 鍵
-                        if (e.key === 'Backspace' || e.key === 'Delete') {
+                        // 處理 Delete 鍵：清空整個輸入框
+                        if (e.key === 'Delete') {
                             e.preventDefault();
                             // 清空輸入框
                             this.value = '';
@@ -2773,9 +2769,10 @@
                             this.focus();
                             return;
                         }
+                        // Backspace 使用預設行為（逐一刪除字元），允許通過
 
-                        // 只允許數字、小數點、方向鍵
-                        if (!/[\d.]/.test(e.key) && !e.key.startsWith('Arrow') && e.key !== 'Enter' && e.key !== 'Tab') {
+                        // 只允許數字、小數點、方向鍵、Backspace
+                        if (!/[\d.]/.test(e.key) && !e.key.startsWith('Arrow') && e.key !== 'Enter' && e.key !== 'Tab' && e.key !== 'Backspace') {
                             e.preventDefault();
                         }
 
@@ -3159,8 +3156,8 @@
                             return; // 允許所有 Ctrl/Cmd 組合鍵，包括貼上
                         }
 
-                        // 處理 Backspace 和 Delete 鍵
-                        if (e.key === 'Backspace' || e.key === 'Delete') {
+                        // 處理 Delete 鍵：清空整個輸入框
+                        if (e.key === 'Delete') {
                             e.preventDefault();
                             // 清空輸入框
                             this.value = '';
@@ -3168,9 +3165,10 @@
                             this.focus();
                             return;
                         }
+                        // Backspace 使用預設行為（逐一刪除字元），允許通過
 
-                        // 只允許數字、小數點、方向鍵、Tab、Escape
-                        if (!/[\d.]/.test(e.key) && !e.key.startsWith('Arrow') && e.key !== 'Tab' && e.key !== 'Escape') {
+                        // 只允許數字、小數點、方向鍵、Tab、Escape、Backspace
+                        if (!/[\d.]/.test(e.key) && !e.key.startsWith('Arrow') && e.key !== 'Tab' && e.key !== 'Escape' && e.key !== 'Backspace') {
                             e.preventDefault();
                         }
 
