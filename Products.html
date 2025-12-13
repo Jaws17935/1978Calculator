@@ -362,14 +362,6 @@
             font-size: 0.8em;
         }
 
-        /* 修改設定面板樣式 */
-        .settings-panel {
-            display: none;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 10px;
-        }
 
         .setting-item {
             display: flex;
@@ -497,26 +489,6 @@
             box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
         }
 
-        .weight-mode-select,
-        .weight-unit-select,
-        .price-unit-select,
-        .price-currency-select {
-            position: absolute;
-            width: 50px;
-            padding: 6px;
-            background: rgba(0, 255, 204, 0.1);
-            border: none;
-            color: #ffffff;
-            font-size: 0.9em;
-            text-align: center;
-            box-sizing: border-box;
-            cursor: pointer;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background-image: none;
-            text-align-last: center;
-        }
 
         /* 設置各列的寬度 */
         th:nth-child(1), td:nth-child(1) { width: 30%; text-align: center; } /* 商品名稱 */
@@ -1188,7 +1160,7 @@
                                             <input type="number" id="globalPlatformCommission" step="0.001" min="0" value="" placeholder="平台抽成" title="全域設定：控制所有計算頁面的平台抽成">
                 </div>
                 <div class="setting-item">
-                    <button type="button" class="exchange-rate-btn" onclick="window.open('https://rate.bot.com.tw/xrt', '台銀匯率', 'width=1200,height=800,scrollbars=yes,resizable=yes')" title="開啟台銀匯率查詢">
+                    <button type="button" class="exchange-rate-btn" onclick="window.open('https://rate.bot.com.tw/xrt', '台銀匯率', 'width=600,height=500,scrollbars=yes,resizable=yes')" title="開啟台銀匯率查詢">
                         台銀匯率
                     </button>
                 </div>
@@ -1203,7 +1175,7 @@
                                 <div class="submenu">
                                     <button type="button" onclick="exportBlankTemplate()">空白範本</button>
                                     <button type="button" onclick="exportToExcel()">資料匯出</button>
-                                    <button type="button" onclick="document.getElementById('fileInput').click()">資料匯入</button>
+                                    <button type="button" onclick="$('fileInput')?.click()">資料匯入</button>
                                 </div>
                             </div>
                         </div>
@@ -1347,65 +1319,22 @@
             platformCommission: undefined
         };
 
-        // 全局格式化函數
-        const formatNumber = (value, isInteger = false) => {
-            if (value === '' || value === undefined || value === null) return '';
-            
+        // 統一的格式化函數 - 優化：合併重複邏輯
+        const formatNumber = (value, isInteger = false, defaultEmpty = '') => {
+            if (value === '' || value === undefined || value === null) return defaultEmpty;
             const num = parseFloat(value);
-            if (isNaN(num)) return value;
-            
-            // 如果是整數格式，直接返回整數
-            if (isInteger) {
-                return Math.round(num).toString();
-            }
-            
-            // 移除小數點後的0
-            if (num % 1 === 0) {
-                return num.toString(); // 整數直接返回，不帶小數點
-            } else {
-                return num.toFixed(2).replace(/\.?0+$/, ''); // 移除尾隨的0
-            }
-        };
-
-        function formatDecimal(value) {
-            if (value === '' || value === null || value === undefined) return '0';
-            const num = parseFloat(value);
-            if (isNaN(num)) return '0';
-            
-            // 如果是整數，直接返回
+            if (isNaN(num)) return defaultEmpty;
+            if (isInteger) return Math.round(num).toString();
             if (num % 1 === 0) return num.toString();
-            
-            // 保留兩位小數
-            let formatted = num.toFixed(2);
-            
-            // 移除尾隨的零和小數點
-            formatted = formatted.replace(/\.?0+$/, '');
-            
-            return formatted;
-        }
-
-        // 專門用於重量格式化的函數 - 內部計算6位小數，顯示2位小數（四捨五入）
-        function formatWeight(value) {
-            if (value === '' || value === null || value === undefined) return '0';
+            return num.toFixed(2).replace(/\.?0+$/, '');
+        };
+        const formatDecimal = (value) => formatNumber(value, false, '0');
+        const formatWeight = (value) => {
             const num = parseFloat(value);
-            if (isNaN(num)) return '0';
-            
-            // 使用高精度計算，顯示時四捨五入到2位小數
-            let formatted = num.toFixed(2);
-            
-            // 如果小數點後面為00就不顯示，但保留到小數點後兩位
-            if (formatted.endsWith('.00')) {
-                return Math.round(num).toString();
-            }
-            
-            // 移除尾隨的零（但最多保留2位小數）
-            formatted = formatted.replace(/0+$/, '');
-            if (formatted.endsWith('.')) {
-                formatted = formatted.slice(0, -1);
-            }
-            
-            return formatted;
-        }
+            if (isNaN(num) || num === 0) return '0';
+            const formatted = num.toFixed(2);
+            return formatted.endsWith('.00') ? Math.round(num).toString() : formatted.replace(/0+$/, '').replace(/\.$/, '');
+        };
 
         // 添加視圖模式狀態（預設為簡易模式）
         let isFullView = false;
@@ -1442,7 +1371,8 @@
                 { field: 'profitLossRate', text: '定價毛利率' },
                 { field: 'returnRate', text: '定價報酬率' }
             ];
-            const thead = document.querySelector('#productTable thead tr');
+            const thead = $$('#productTable thead tr');
+            if (!thead) return;
             thead.innerHTML = headers.map(header => `
                 <th class="sortable${simpleFields.includes(header.field) ? '' : ' full-view'}" data-field="${header.field}">
                     ${header.text}
@@ -1497,8 +1427,8 @@
             });
 
             // 檢查是否在搜尋模式
-            const searchInput = document.getElementById('searchInput');
-            const searchText = searchInput ? searchInput.value.trim() : '';
+            initCachedElements();
+            const searchText = cachedElements.searchInput ? cachedElements.searchInput.value.trim() : '';
             
             if (searchText) {
                 // 在搜尋模式下，重新執行搜尋（會自動應用排序）
@@ -1524,13 +1454,16 @@
         // 更新設定UI的輔助函數
         function updateSettingsUI() {
             if (settings.exchangeRate !== undefined) {
-                document.getElementById('globalExchangeRate').value = settings.exchangeRate;
+                const el = $('globalExchangeRate');
+                if (el) el.value = settings.exchangeRate;
             }
             if (settings.internationalShipping !== undefined) {
-                document.getElementById('globalInternationalShipping').value = settings.internationalShipping;
+                const el = $('globalInternationalShipping');
+                if (el) el.value = settings.internationalShipping;
             }
             if (settings.platformCommission !== undefined) {
-                document.getElementById('globalPlatformCommission').value = settings.platformCommission;
+                const el = $('globalPlatformCommission');
+                if (el) el.value = settings.platformCommission;
             }
         }
 
@@ -1540,16 +1473,15 @@
                 const now = Date.now();
                 
                 // 初始化視圖模式
-                const toggleButton = document.getElementById('viewModeToggle');
-                const tableContainer = document.querySelector('.table-container');
-                if (toggleButton && tableContainer) {
+                initCachedElements();
+                if (cachedElements.viewModeToggle && cachedElements.tableContainer) {
                     // 設置按鈕文字
-                    toggleButton.textContent = isFullView ? '簡易模式' : '完整模式';
+                    cachedElements.viewModeToggle.textContent = isFullView ? '簡易模式' : '完整模式';
                     // 設置表格容器類別（預設為簡易模式）
                     if (isFullView) {
-                        tableContainer.classList.remove('simplified-view');
+                        cachedElements.tableContainer.classList.remove('simplified-view');
                     } else {
-                        tableContainer.classList.add('simplified-view');
+                        cachedElements.tableContainer.classList.add('simplified-view');
                     }
                 }
                 
@@ -1619,11 +1551,11 @@
         }
 
         // 更新設定
-        async function updateSettings(isFromMessage = false) {
+        async function updateSettings() {
             try {
-                const exchangeRateInput = document.getElementById('globalExchangeRate');
-                const internationalShippingInput = document.getElementById('globalInternationalShipping');
-                const platformCommissionInput = document.getElementById('globalPlatformCommission');
+                const exchangeRateInput = $('globalExchangeRate');
+                const internationalShippingInput = $('globalInternationalShipping');
+                const platformCommissionInput = $('globalPlatformCommission');
                 
                 // 正確處理輸入值，允許 0 值，空值則設為 undefined
                 const newExchangeRate = exchangeRateInput.value === '' ? undefined : parseFloat(exchangeRateInput.value);
@@ -1781,9 +1713,12 @@
                         settings = newSettings;
                         
                         // 更新輸入框的值，確保 0 值也能正確顯示
-                        document.getElementById('globalExchangeRate').value = newSettings.exchangeRate;
-                        document.getElementById('globalInternationalShipping').value = newSettings.internationalShipping;
-                        document.getElementById('globalPlatformCommission').value = newSettings.platformCommission;
+                        const exchangeRateEl = $('globalExchangeRate');
+                        const internationalShippingEl = $('globalInternationalShipping');
+                        const platformCommissionEl = $('globalPlatformCommission');
+                        if (exchangeRateEl) exchangeRateEl.value = newSettings.exchangeRate;
+                        if (internationalShippingEl) internationalShippingEl.value = newSettings.internationalShipping;
+                        if (platformCommissionEl) platformCommissionEl.value = newSettings.platformCommission;
                         
                         // 更新 Firestore
                         await db.collection('settings').doc('global').set(newSettings);
@@ -2105,10 +2040,11 @@
 
         // 修改商品名稱點擊處理函數（兩次點擊邏輯：第一次選擇，第二次編輯）
         function handleProductNameClick(index) {
-            const tableContainer = document.querySelector('.table-container');
-            if (tableContainer.classList.contains('delete-mode')) {
-                const productName = document.querySelector(`.product-name[data-index="${index}"]`);
-                const checkbox = document.querySelector(`.product-checkbox[data-index="${index}"]`);
+            initCachedElements();
+            const tableContainer = cachedElements.tableContainer;
+            if (tableContainer && tableContainer.classList.contains('delete-mode')) {
+                const productName = $$(`.product-name[data-index="${index}"]`);
+                const checkbox = $$(`.product-checkbox[data-index="${index}"]`);
                 
                 if (productName && checkbox) {
                     checkbox.checked = !checkbox.checked;
@@ -2131,16 +2067,16 @@
                     }
                     
                     if (selectedItem.type === 'product') {
-                        const previousRow = document.querySelector(`tr:has(.product-name[data-index="${selectedItem.index}"])`);
+                        const previousRow = $$(`tr:has(.product-name[data-index="${selectedItem.index}"])`);
                         if (previousRow) {
                             previousRow.classList.remove('viewing');
                         }
-                        const previousProductName = document.querySelector(`.product-name[data-index="${selectedItem.index}"]`);
+                        const previousProductName = $$(`.product-name[data-index="${selectedItem.index}"]`);
                         if (previousProductName) {
                             previousProductName.classList.remove('viewing');
                         }
                     } else if (selectedItem.type === 'cell') {
-                        const previousCell = document.querySelector(`.editable-cell[data-index="${selectedItem.index}"][data-field="${selectedItem.field}"]`);
+                        const previousCell = $$(`.editable-cell[data-index="${selectedItem.index}"][data-field="${selectedItem.field}"]`);
                         if (previousCell) {
                             previousCell.classList.remove('viewing');
                             const previousRow = previousCell.closest('tr');
@@ -2162,11 +2098,11 @@
                         clearTimeout(highlightTimer);
                         highlightTimer = null;
                     }
-                    const currentRow = document.querySelector(`tr:has(.product-name[data-index="${index}"])`);
+                    const currentRow = $$(`tr:has(.product-name[data-index="${index}"])`);
                     if (currentRow) {
                         currentRow.classList.remove('viewing');
                     }
-                    const productName = document.querySelector(`.product-name[data-index="${index}"]`);
+                    const productName = $$(`.product-name[data-index="${index}"]`);
                     if (productName) {
                         productName.classList.remove('viewing');
                     }
@@ -2211,7 +2147,7 @@
                         highlightTimer = null;
                     }
                     
-                    const productName = document.querySelector(`.product-name[data-index="${index}"]`);
+                    const productName = $$(`.product-name[data-index="${index}"]`);
                     if (productName) {
                         const currentRow = productName.closest('tr');
                         if (currentRow) {
@@ -2223,11 +2159,11 @@
                     // 設置 5 秒後自動清除高亮
                     highlightTimer = setTimeout(() => {
                         selectedItem = null;
-                        const currentRow = document.querySelector(`tr:has(.product-name[data-index="${index}"])`);
+                        const currentRow = $$(`tr:has(.product-name[data-index="${index}"])`);
                         if (currentRow) {
                             currentRow.classList.remove('viewing');
                         }
-                        const nameElement = document.querySelector(`.product-name[data-index="${index}"]`);
+                        const nameElement = $$(`.product-name[data-index="${index}"]`);
                         if (nameElement) {
                             nameElement.classList.remove('viewing');
                         }
@@ -2238,8 +2174,9 @@
         }
 
         function toggleDeleteMode() {
-            const deleteOptions = document.getElementById('deleteOptions');
-            const tableContainer = document.querySelector('.table-container');
+            const deleteOptions = $('deleteOptions');
+            initCachedElements();
+            const tableContainer = cachedElements.tableContainer;
             
             if (!deleteOptions) {
                 return;
@@ -2259,8 +2196,9 @@
 
         function cancelDelete() {
             // 退出刪除模式並重置狀態
-            const deleteOptions = document.getElementById('deleteOptions');
-            const tableContainer = document.querySelector('.table-container');
+            const deleteOptions = $('deleteOptions');
+            initCachedElements();
+            const tableContainer = cachedElements.tableContainer;
             
             // 隱藏刪除選項
             if (deleteOptions) {
@@ -2312,101 +2250,84 @@
             refreshTableWithSearchState();
         }
 
-        // 切換視圖模式
+        // 切換視圖模式 - 優化：使用緩存
         function toggleViewMode() {
+            initCachedElements();
             isFullView = !isFullView;
-            const toggleButton = document.getElementById('viewModeToggle');
-            toggleButton.textContent = isFullView ? '簡易模式' : '完整模式';
-            
-            // 切換表格容器的類
-            const tableContainer = document.querySelector('.table-container');
+            cachedElements.viewModeToggle.textContent = isFullView ? '簡易模式' : '完整模式';
             if (isFullView) {
-                tableContainer.classList.remove('simplified-view');
+                cachedElements.tableContainer.classList.remove('simplified-view');
             } else {
-                tableContainer.classList.add('simplified-view');
+                cachedElements.tableContainer.classList.add('simplified-view');
             }
-            
-            // 重新生成表頭
             updateTableHeaders();
-            
-            // 檢查搜尋框是否有數據，如果有則保留搜尋狀態
-            const searchInput = document.getElementById('searchInput');
-            const searchText = searchInput ? searchInput.value.trim() : '';
-            
-            if (searchText) {
-                // 如果有搜尋內容，保留搜尋狀態進行切換
-                refreshTableWithSearchState();
-            } else {
-                // 如果沒有搜尋內容，正常初始化表格
-                initTable();
-            }
+            refreshTableWithSearchState();
         }
 
-        // 優化DOM緩存
+        // 優化DOM緩存 - 擴展緩存範圍
+        const $ = (id) => document.getElementById(id);
+        const $$ = (sel) => document.querySelector(sel);
         let cachedElements = {
             tbody: null,
             pagination: null,
-            tableHeaders: {}
+            searchInput: null,
+            viewModeToggle: null,
+            tableContainer: null
         };
         
         function initCachedElements() {
             if (!cachedElements.tbody) {
-                cachedElements.tbody = document.getElementById('tableBody');
-                cachedElements.pagination = document.getElementById('pagination');
+                cachedElements.tbody = $('tableBody');
+                cachedElements.pagination = $('pagination');
+                cachedElements.searchInput = $('searchInput');
+                cachedElements.viewModeToggle = $('viewModeToggle');
+                cachedElements.tableContainer = $$('.table-container');
             }
+        }
+
+        // 統一的格式化數據函數 - 避免重複計算
+        function formatProductData(product) {
+            const profitLoss = parseFloat(product.profitLoss) || 0;
+            const inlandShippingValue = parseFloat(product.inlandShipping) || 0;
+            const materialCount = parseInt(product.materialCount) || 0;
+            const actualPriceValue = parseFloat(product.actualPrice) || 0;
+            return {
+                profitLoss,
+                profitLossColor: profitLoss < 0 ? '#ff3366' : '#00ffcc',
+                inlandShipping: inlandShippingValue === 0 ? '無' : formatDecimal(product.inlandShipping),
+                materialCount: materialCount <= 6 ? '無' : materialCount.toString(),
+                actualPrice: actualPriceValue === 0 ? formatNumber(product.suggestedPrice || 0) : formatNumber(product.actualPrice),
+                actualPriceIsEmpty: actualPriceValue === 0
+            };
         }
 
         // 創建DocumentFragment以優化DOM操作
         function createTableRowElement(product, index, start) {
             const row = document.createElement('tr');
-            const profitLoss = parseFloat(product.profitLoss) || 0;
-            const profitLossColor = profitLoss < 0 ? '#ff3366' : '#00ffcc';
-            
-            // 預計算格式化值以避免重複計算
-            const formattedData = {
-                inlandShipping: (() => {
-                    const value = parseFloat(product.inlandShipping) || 0;
-                    return value === 0 ? '無' : formatDecimal(product.inlandShipping);
-                })(),
-                materialCount: (() => {
-                    const count = parseInt(product.materialCount) || 0;
-                    return count <= 6 ? '無' : count.toString();
-                })(),
-                actualPrice: (() => {
-                    const value = parseFloat(product.actualPrice) || 0;
-                    // 如果未輸入，顯示建議定價
-                    if (value === 0) {
-                        return formatNumber(product.suggestedPrice || 0);
-                    }
-                    return formatNumber(product.actualPrice);
-                })(),
-                actualPriceIsEmpty: (() => {
-                    const value = parseFloat(product.actualPrice) || 0;
-                    return value === 0;
-                })()
-            };
+            const formatted = formatProductData(product);
 
+            const isSelected = selectedItem && selectedItem.type === 'product' && selectedItem.index === (start + index);
             row.innerHTML = `
                 <td>
                     <input type="checkbox" class="product-checkbox" data-index="${start + index}" style="display: none;">
-                    <span class="product-name${selectedItem && selectedItem.type === 'product' && selectedItem.index === (start + index) ? ' viewing' : ''}" data-index="${start + index}" onclick="handleProductNameClick(${start + index})" style="cursor: pointer; color: #00ffcc;">
+                    <span class="product-name${isSelected ? ' viewing' : ''}" data-index="${start + index}" onclick="handleProductNameClick(${start + index})" style="cursor: pointer; color: #00ffcc;">
                         ${product.name || '未命名商品'}
                     </span>
                 </td>
                 <td class="editable-cell" data-field="purchasePrice" data-index="${start + index}">${formatDecimal(product.purchasePrice)}</td>
                 <td class="editable-cell" data-field="quantity" data-index="${start + index}">${formatNumber(product.quantity, true)}</td>
-                <td class="editable-cell full-view" data-field="inlandShipping" data-index="${start + index}">${formattedData.inlandShipping}</td>
+                <td class="editable-cell full-view" data-field="inlandShipping" data-index="${start + index}">${formatted.inlandShipping}</td>
                 <td class="editable-cell full-view" data-field="singleWeight" data-index="${start + index}">${formatWeight(product.singleWeight)}</td>
                 <td class="non-editable-cell full-view" data-field="totalWeight" data-index="${start + index}">${formatWeight(product.totalWeight)}</td>
-                <td class="editable-cell full-view" data-field="materialCount" data-index="${start + index}">${formattedData.materialCount}</td>
+                <td class="editable-cell full-view" data-field="materialCount" data-index="${start + index}">${formatted.materialCount}</td>
                 <td class="non-editable-cell" data-field="singleCost" data-index="${start + index}">${formatNumber(product.singleCost)}</td>
                 <td class="non-editable-cell" data-field="totalCost" data-index="${start + index}">${formatNumber(product.totalCost)}</td>
                 <td class="non-editable-cell" data-field="suggestedPrice" data-index="${start + index}">${formatNumber(product.suggestedPrice)}</td>
-                <td class="editable-cell" data-field="actualPrice" data-index="${start + index}" style="${formattedData.actualPriceIsEmpty ? 'color: #888;' : ''}">${formattedData.actualPrice}</td>
-                <td class="non-editable-cell" data-field="profitLoss" data-index="${start + index}" style="color: ${profitLossColor}">${formatNumber(product.profitLoss)}</td>
-                <td class="non-editable-cell" data-field="totalProfitLoss" data-index="${start + index}" style="color: ${profitLossColor}">${formatNumber(product.totalProfitLoss || 0)}</td>
-                <td class="non-editable-cell full-view" data-field="profitLossRate" data-index="${start + index}" style="color: ${profitLossColor}">${(parseFloat(product.profitLossRate) || 0).toFixed(2) + '%'}</td>
-                <td class="non-editable-cell full-view" data-field="returnRate" data-index="${start + index}" style="color: ${profitLossColor}">${(parseFloat(product.returnRate) || 0).toFixed(2) + '%'}</td>
+                <td class="editable-cell" data-field="actualPrice" data-index="${start + index}" style="${formatted.actualPriceIsEmpty ? 'color: #888;' : ''}">${formatted.actualPrice}</td>
+                <td class="non-editable-cell" data-field="profitLoss" data-index="${start + index}" style="color: ${formatted.profitLossColor}">${formatNumber(product.profitLoss)}</td>
+                <td class="non-editable-cell" data-field="totalProfitLoss" data-index="${start + index}" style="color: ${formatted.profitLossColor}">${formatNumber(product.totalProfitLoss || 0)}</td>
+                <td class="non-editable-cell full-view" data-field="profitLossRate" data-index="${start + index}" style="color: ${formatted.profitLossColor}">${(parseFloat(product.profitLossRate) || 0).toFixed(2) + '%'}</td>
+                <td class="non-editable-cell full-view" data-field="returnRate" data-index="${start + index}" style="color: ${formatted.profitLossColor}">${(parseFloat(product.returnRate) || 0).toFixed(2) + '%'}</td>
             `;
             
             // 如果該項目被選中，添加 viewing 類
@@ -2430,22 +2351,22 @@
             return row;
         }
 
-        // 修改初始化表格函數中的單元格編輯邏輯
+        // 修改初始化表格函數中的單元格編輯邏輯 - 優化：使用緩存
         function initTable() {
             initCachedElements();
-            // 確保視圖模式正確初始化
-            const toggleButton = document.getElementById('viewModeToggle');
-            const tableContainer = document.querySelector('.table-container');
-            if (toggleButton && tableContainer) {
-                toggleButton.textContent = isFullView ? '簡易模式' : '完整模式';
+            if (cachedElements.viewModeToggle && cachedElements.tableContainer) {
+                cachedElements.viewModeToggle.textContent = isFullView ? '簡易模式' : '完整模式';
                 if (isFullView) {
-                    tableContainer.classList.remove('simplified-view');
+                    cachedElements.tableContainer.classList.remove('simplified-view');
                 } else {
-                    tableContainer.classList.add('simplified-view');
+                    cachedElements.tableContainer.classList.add('simplified-view');
                 }
             }
-            const simpleFields = ['name', 'purchasePrice', 'quantity', 'singleCost', 'totalCost', 'suggestedPrice', 'actualPrice', 'profitLoss', 'totalProfitLoss'];
             const tbody = cachedElements.tbody;
+            if (!tbody) {
+                console.error('tbody element not found');
+                return;
+            }
             
             // 使用DocumentFragment批量更新DOM
             const fragment = document.createDocumentFragment();
@@ -2463,24 +2384,25 @@
             tbody.appendChild(fragment);
             // 保持排序圖標狀態
             if (currentSort.column) {
-                const th = document.querySelector(`.sortable[data-field="${currentSort.column}"]`);
+                const th = $$(`.sortable[data-field="${currentSort.column}"]`);
                 if (th) {
                     th.classList.add(currentSort.direction);
                 }
             }
-            // 使用統一的編輯事件綁定函數
 
             updatePagination();
-
-            // 在最後添加事件綁定
             initDelegatedEvents();
         }
 
-        // 更新分頁
+        // 更新分頁 - 優化：使用緩存
         function updatePagination() {
+            initCachedElements();
+            if (!cachedElements.pagination) {
+                console.error('pagination element not found');
+                return;
+            }
             const totalPages = Math.ceil(products.length / itemsPerPage);
-            const pagination = document.getElementById('pagination');
-            pagination.innerHTML = '';
+            cachedElements.pagination.innerHTML = '';
 
             // 上一頁按鈕
             if (currentPage > 1) {
@@ -2490,7 +2412,7 @@
                     currentPage--;
                     initTable();
                 };
-                pagination.appendChild(prevButton);
+                cachedElements.pagination.appendChild(prevButton);
             }
 
             // 頁碼按鈕
@@ -2504,7 +2426,7 @@
                     currentPage = i;
                     initTable();
                 };
-                pagination.appendChild(pageButton);
+                cachedElements.pagination.appendChild(pageButton);
             }
 
             // 下一頁按鈕
@@ -2515,31 +2437,28 @@
                     currentPage++;
                     initTable();
                 };
-                pagination.appendChild(nextButton);
+                cachedElements.pagination.appendChild(nextButton);
             }
         }
 
         // 優化搜尋功能 - 添加緩存和性能優化
         let searchCache = new Map();
         
-        // 智能表格重新渲染函數：保持搜尋狀態
+        // 智能表格重新渲染函數：保持搜尋狀態 - 優化：使用緩存
         function refreshTableWithSearchState() {
-            const searchInput = document.getElementById('searchInput');
-            const searchText = searchInput ? searchInput.value.trim() : '';
-            
+            initCachedElements();
+            const searchText = cachedElements.searchInput ? cachedElements.searchInput.value.trim() : '';
             if (searchText) {
-                // 如果有搜尋內容，重新應用搜尋篩選
                 searchTable();
             } else {
-                // 如果沒有搜尋內容，顯示所有數據
                 currentPage = 1;
                 initTable();
             }
         }
 
         const searchTable = debounce(function() {
-            const input = document.getElementById('searchInput');
-            const searchText = input.value.toLowerCase().trim();
+            initCachedElements();
+            const searchText = cachedElements.searchInput ? cachedElements.searchInput.value.toLowerCase().trim() : '';
             
             // 如果搜尋框為空，顯示所有數據
             if (!searchText) {
@@ -2619,23 +2538,10 @@
             const end = start + itemsPerPage;
             const paginatedProducts = filteredProducts.slice(start, end);
 
-            // 渲染過濾後的數據
+            // 渲染過濾後的數據 - 使用統一的格式化函數
             paginatedProducts.forEach((product, index) => {
                 const row = document.createElement('tr');
-                // 處理定價損益的顯示顏色
-                const profitLoss = parseFloat(product.profitLoss) || 0;
-                const profitLossColor = profitLoss < 0 ? '#ff3366' : '#00ffcc';
-                // 使用全局格式化函數
-                // 修改內地運費顯示邏輯
-                const inlandShippingValue = parseFloat(product.inlandShipping) || 0;
-                const inlandShippingDisplay = inlandShippingValue === 0 ? '無' : formatDecimal(product.inlandShipping);
-                // 修改材數顯示邏輯
-                const materialCount = parseInt(product.materialCount) || 0;
-                const materialCountDisplay = materialCount <= 6 ? '無' : materialCount.toString();
-                // 修改實際定價顯示邏輯：如果未輸入，顯示建議定價並使用灰色
-                const actualPriceValue = parseFloat(product.actualPrice) || 0;
-                const actualPriceDisplay = actualPriceValue === 0 ? formatNumber(product.suggestedPrice || 0) : formatNumber(product.actualPrice);
-                const actualPriceStyle = actualPriceValue === 0 ? 'color: #888;' : '';
+                const formatted = formatProductData(product);
 
                 // 高亮顯示匹配的文字
                 let productName = product.name || '未命名商品';
@@ -2649,27 +2555,28 @@
                 // 找到原始數據中的索引
                 const originalIndex = products.findIndex(p => p.id === product.id);
 
+                const isSelected = selectedItem && selectedItem.type === 'product' && selectedItem.index === originalIndex;
                 row.innerHTML = `
                     <td>
                         <input type="checkbox" class="product-checkbox" data-index="${originalIndex}" style="display: none;">
-                        <span class="product-name${selectedItem && selectedItem.type === 'product' && selectedItem.index === originalIndex ? ' viewing' : ''}" data-index="${originalIndex}" onclick="handleProductNameClick(${originalIndex})" style="cursor: pointer; color: #00ffcc;">
+                        <span class="product-name${isSelected ? ' viewing' : ''}" data-index="${originalIndex}" onclick="handleProductNameClick(${originalIndex})" style="cursor: pointer; color: #00ffcc;">
                             ${productName}
                         </span>
                     </td>
                     <td class="editable-cell" data-field="purchasePrice" data-index="${originalIndex}">${formatDecimal(product.purchasePrice)}</td>
                     <td class="editable-cell" data-field="quantity" data-index="${originalIndex}">${formatNumber(product.quantity, true)}</td>
-                    <td class="editable-cell full-view" data-field="inlandShipping" data-index="${originalIndex}">${inlandShippingDisplay}</td>
+                    <td class="editable-cell full-view" data-field="inlandShipping" data-index="${originalIndex}">${formatted.inlandShipping}</td>
                     <td class="editable-cell full-view" data-field="singleWeight" data-index="${originalIndex}">${formatWeight(product.singleWeight)}</td>
                     <td class="non-editable-cell full-view" data-field="totalWeight" data-index="${originalIndex}">${formatWeight(product.totalWeight)}</td>
-                    <td class="editable-cell full-view" data-field="materialCount" data-index="${originalIndex}">${materialCountDisplay}</td>
+                    <td class="editable-cell full-view" data-field="materialCount" data-index="${originalIndex}">${formatted.materialCount}</td>
                     <td class="non-editable-cell" data-field="singleCost" data-index="${originalIndex}">${formatNumber(product.singleCost)}</td>
                     <td class="non-editable-cell" data-field="totalCost" data-index="${originalIndex}">${formatNumber(product.totalCost)}</td>
                     <td class="non-editable-cell" data-field="suggestedPrice" data-index="${originalIndex}">${formatNumber(product.suggestedPrice)}</td>
-                    <td class="editable-cell" data-field="actualPrice" data-index="${originalIndex}" style="${actualPriceStyle}">${actualPriceDisplay}</td>
-                    <td class="non-editable-cell" data-field="profitLoss" data-index="${originalIndex}" style="color: ${profitLossColor}">${formatNumber(product.profitLoss)}</td>
-                    <td class="non-editable-cell" data-field="totalProfitLoss" data-index="${originalIndex}" style="color: ${profitLossColor}">${formatNumber(product.totalProfitLoss || 0)}</td>
-                    <td class="non-editable-cell full-view" data-field="profitLossRate" data-index="${originalIndex}" style="color: ${profitLossColor}">${(parseFloat(product.profitLossRate) || 0).toFixed(2) + '%'}</td>
-                    <td class="non-editable-cell full-view" data-field="returnRate" data-index="${originalIndex}" style="color: ${profitLossColor}">${(parseFloat(product.returnRate) || 0).toFixed(2) + '%'}</td>
+                    <td class="editable-cell" data-field="actualPrice" data-index="${originalIndex}" style="${formatted.actualPriceIsEmpty ? 'color: #888;' : ''}">${formatted.actualPrice}</td>
+                    <td class="non-editable-cell" data-field="profitLoss" data-index="${originalIndex}" style="color: ${formatted.profitLossColor}">${formatNumber(product.profitLoss)}</td>
+                    <td class="non-editable-cell" data-field="totalProfitLoss" data-index="${originalIndex}" style="color: ${formatted.profitLossColor}">${formatNumber(product.totalProfitLoss || 0)}</td>
+                    <td class="non-editable-cell full-view" data-field="profitLossRate" data-index="${originalIndex}" style="color: ${formatted.profitLossColor}">${(parseFloat(product.profitLossRate) || 0).toFixed(2) + '%'}</td>
+                    <td class="non-editable-cell full-view" data-field="returnRate" data-index="${originalIndex}" style="color: ${formatted.profitLossColor}">${(parseFloat(product.returnRate) || 0).toFixed(2) + '%'}</td>
                 `;
                 
                 // 如果該項目被選中，添加 viewing 類
@@ -2698,7 +2605,7 @@
 
             // 保持排序圖標狀態
             if (currentSort.column) {
-                const th = document.querySelector(`.sortable[data-field="${currentSort.column}"]`);
+                const th = $$(`.sortable[data-field="${currentSort.column}"]`);
                 if (th) {
                     th.classList.add(currentSort.direction);
                 }
@@ -2708,11 +2615,15 @@
             initDelegatedEvents();
         }
 
-        // 修改更新分頁函數
+        // 修改更新分頁函數 - 優化：使用緩存
         function updateFilteredPagination(totalItems) {
+            initCachedElements();
+            if (!cachedElements.pagination) {
+                console.error('pagination element not found');
+                return;
+            }
             const totalPages = Math.ceil(totalItems / itemsPerPage);
-            const pagination = document.getElementById('pagination');
-            pagination.innerHTML = '';
+            cachedElements.pagination.innerHTML = '';
 
             // 上一頁按鈕
             if (currentPage > 1) {
@@ -2722,7 +2633,7 @@
                     currentPage--;
                     searchTable();
                 };
-                pagination.appendChild(prevButton);
+                cachedElements.pagination.appendChild(prevButton);
             }
 
             // 頁碼按鈕
@@ -2736,7 +2647,7 @@
                     currentPage = i;
                     searchTable();
                 };
-                pagination.appendChild(pageButton);
+                cachedElements.pagination.appendChild(pageButton);
             }
 
             // 下一頁按鈕
@@ -2747,7 +2658,7 @@
                     currentPage++;
                     searchTable();
                 };
-                pagination.appendChild(nextButton);
+                cachedElements.pagination.appendChild(nextButton);
             }
         }
 
@@ -2757,7 +2668,9 @@
         function initDelegatedEvents() {
             if (delegatedEventsInitialized) return;
             
-            const tableContainer = document.querySelector('.table-container');
+            initCachedElements();
+            const tableContainer = cachedElements.tableContainer;
+            if (!tableContainer) return;
             
             // 使用事件委託處理所有編輯事件（兩次點擊邏輯：第一次高亮，第二次編輯）
             tableContainer.addEventListener('click', function(e) {
@@ -2765,7 +2678,7 @@
                 if (!cell) return;
                 
                 // 如果在删除模式下，禁用编辑功能
-                if (document.querySelector('.table-container').classList.contains('delete-mode')) {
+                if (tableContainer.classList.contains('delete-mode')) {
                     return;
                 }
                 
@@ -2788,16 +2701,16 @@
                     }
                     
                     if (selectedItem.type === 'product') {
-                        const previousRow = document.querySelector(`tr:has(.product-name[data-index="${selectedItem.index}"])`);
+                        const previousRow = $$(`tr:has(.product-name[data-index="${selectedItem.index}"])`);
                         if (previousRow) {
                             previousRow.classList.remove('viewing');
                         }
-                        const previousProductName = document.querySelector(`.product-name[data-index="${selectedItem.index}"]`);
+                        const previousProductName = $$(`.product-name[data-index="${selectedItem.index}"]`);
                         if (previousProductName) {
                             previousProductName.classList.remove('viewing');
                         }
                     } else if (selectedItem.type === 'cell') {
-                        const previousCell = document.querySelector(`.editable-cell[data-index="${selectedItem.index}"][data-field="${selectedItem.field}"]`);
+                        const previousCell = $$(`.editable-cell[data-index="${selectedItem.index}"][data-field="${selectedItem.field}"]`);
                         if (previousCell) {
                             previousCell.classList.remove('viewing');
                             const previousRow = previousCell.closest('tr');
@@ -2946,8 +2859,8 @@
                                     };
                                     
                                     // 檢查是否在搜尋模式
-                                    const searchInput = document.getElementById('searchInput');
-                                    if (searchInput.value.trim()) {
+                                    initCachedElements();
+                                    if (cachedElements.searchInput && cachedElements.searchInput.value.trim()) {
                                         // 在搜尋模式下，重新執行搜尋以保持結果
                                         searchTable();
                                     } else {
@@ -2974,8 +2887,8 @@
                                 // 值沒有變化，但已經有輸入數值，保持顯示該數值
                                 // 不需要更新，直接恢復顯示（但保持輸入的數值）
                                 // 檢查是否在搜尋模式
-                                const searchInput = document.getElementById('searchInput');
-                                if (searchInput.value.trim()) {
+                                initCachedElements();
+                                if (cachedElements.searchInput && cachedElements.searchInput.value.trim()) {
                                     // 在搜尋模式下，重新執行搜尋以保持結果
                                     searchTable();
                                 } else {
@@ -3029,8 +2942,8 @@
                                 };
                                 
                                 // 檢查是否在搜尋模式
-                                const searchInput = document.getElementById('searchInput');
-                                if (searchInput.value.trim()) {
+                                initCachedElements();
+                                if (cachedElements.searchInput && cachedElements.searchInput.value.trim()) {
                                     // 在搜尋模式下，重新執行搜尋以保持結果
                                     searchTable();
                                 } else {
@@ -3078,7 +2991,7 @@
                     // 設置 5 秒後自動清除高亮
                     highlightTimer = setTimeout(() => {
                         selectedItem = null;
-                        const currentCell = document.querySelector(`.editable-cell[data-index="${index}"][data-field="${field}"]`);
+                        const currentCell = $$(`.editable-cell[data-index="${index}"][data-field="${field}"]`);
                         if (currentCell) {
                             currentCell.classList.remove('viewing');
                             const currentRow = currentCell.closest('tr');
@@ -3112,8 +3025,9 @@
                 });
 
                 // 顯示確認視窗
-                const modal = document.getElementById('errorModal');
-                const modalBody = document.getElementById('errorModalBody');
+                const modal = $('errorModal');
+                const modalBody = $('errorModalBody');
+                if (!modal || !modalBody) return;
                 const modalFooter = modal.querySelector('.modal-footer');
                 
                 // 清空之前的按鈕
@@ -3220,10 +3134,10 @@
         // 添加設定輸入框的鍵盤事件處理
         document.addEventListener('DOMContentLoaded', function() {
             const settingInputs = [
-                document.getElementById('globalExchangeRate'),
-                document.getElementById('globalInternationalShipping'),
-                document.getElementById('globalPlatformCommission')
-            ];
+                $('globalExchangeRate'),
+                $('globalInternationalShipping'),
+                $('globalPlatformCommission')
+            ].filter(el => el !== null);
 
             settingInputs.forEach(input => {
                 if (input) {
@@ -3360,8 +3274,8 @@
             });
 
             // 整合批量操作功能
-            const batchBtn = document.getElementById('batchOperationBtn');
-            const dropdown = document.getElementById('batchDropdown');
+            const batchBtn = $('batchOperationBtn');
+            const dropdown = $('batchDropdown');
             
             if (batchBtn && dropdown) {
                 // 點擊按鈕切換下拉選單
@@ -3387,7 +3301,8 @@
             // 整合表格初始化功能
             updateTableHeaders();
             
-            const searchInput = document.getElementById('searchInput');
+            initCachedElements();
+            const searchInput = cachedElements.searchInput;
             if (searchInput) {
                 searchInput.addEventListener('keydown', function(e) {
                     if (e.key === 'Delete') {
@@ -3721,13 +3636,12 @@
 
         // 添加錯誤視窗相關函數
         function showErrorModal(message) {
-            const modal = document.getElementById('errorModal');
-            const modalBody = document.getElementById('errorModalBody');
+            const modal = $('errorModal');
+            const modalBody = $('errorModalBody');
+            if (!modal || !modalBody) return;
             modalBody.innerHTML = message;
-            modal.classList.add('show');  // 使用 add 方法添加 show 類
+            modal.classList.add('show');
         }
-
-
 
         // 匯出空白範本
         async function exportBlankTemplate() {
@@ -3782,41 +3696,48 @@
 
         // 顯示密碼驗證視窗
         function showPasswordModal() {
-            const modal = document.getElementById('passwordModal');
+            const modal = $('passwordModal');
+            const passwordInput = $('passwordInput');
+            if (!modal || !passwordInput) return;
             modal.classList.add('show');
-            document.getElementById('passwordInput').value = '';
-            document.getElementById('passwordInput').focus();
+            passwordInput.value = '';
+            passwordInput.focus();
         }
 
         // 關閉密碼驗證視窗
         function closePasswordModal() {
-            const modal = document.getElementById('passwordModal');
+            const modal = $('passwordModal');
+            if (!modal) return;
             modal.classList.remove('show');
         }
 
         // 驗證密碼
         async function verifyPassword() {
-            const password = document.getElementById('passwordInput').value;
+            const passwordInput = $('passwordInput');
+            if (!passwordInput) return;
+            const password = passwordInput.value;
             if (password === '0878') {
                 // 密碼正確，關閉密碼視窗並顯示最終確認視窗
                 closePasswordModal();
                 showFinalDeleteConfirmModal();
             } else {
                 alert('密碼錯誤！');
-                document.getElementById('passwordInput').value = '';
-                document.getElementById('passwordInput').focus();
+                passwordInput.value = '';
+                passwordInput.focus();
             }
         }
 
         // 顯示最終確認刪除視窗
         function showFinalDeleteConfirmModal() {
-            const modal = document.getElementById('finalDeleteConfirmModal');
+            const modal = $('finalDeleteConfirmModal');
+            if (!modal) return;
             modal.classList.add('show');
         }
 
         // 關閉最終確認刪除視窗
         function closeFinalDeleteConfirmModal() {
-            const modal = document.getElementById('finalDeleteConfirmModal');
+            const modal = $('finalDeleteConfirmModal');
+            if (!modal) return;
             modal.classList.remove('show');
         }
 
@@ -3858,19 +3779,23 @@
         }
 
         // 添加密碼輸入框的鍵盤事件（只保留Enter確認功能）
-        document.getElementById('passwordInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                verifyPassword();
-            }
-            // 不允許ESC關閉，只能通過按鈕關閉
-        });
+        const passwordInput = $('passwordInput');
+        if (passwordInput) {
+            passwordInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    verifyPassword();
+                }
+                // 不允許ESC關閉，只能通過按鈕關閉
+            });
+        }
 
         // 所有模態視窗都不允許點擊外部關閉
 
         // 新增 info modal 相關函數
         function showInfoModal(message, autoClose = false, autoCloseDelay = 3000) {
-            const modal = document.getElementById('infoModal');
-            const modalBody = document.getElementById('infoModalBody');
+            const modal = $('infoModal');
+            const modalBody = $('infoModalBody');
+            if (!modal || !modalBody) return;
             modalBody.innerHTML = message || '資料匯入完成';
             modal.classList.add('show');
             
@@ -3882,13 +3807,16 @@
             }
         }
         function closeInfoModal() {
-            const modal = document.getElementById('infoModal');
+            const modal = $('infoModal');
+            if (!modal) return;
             modal.classList.remove('show');
         }
 
         // 統一關閉 modal 函數
         function closeModal(id) {
-            document.getElementById(id).classList.remove('show');
+            const modal = $(id);
+            if (!modal) return;
+            modal.classList.remove('show');
         }
 
     </script>
