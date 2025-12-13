@@ -347,39 +347,6 @@
         transform: translate(-50%, -50%) scale(1);
       }
     }
-    .modal-header {
-      margin-bottom: 12px;
-      position: relative;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .modal-header h2 {
-      color: var(--primary-color);
-      margin: 0;
-      font-size: 1.1em;
-      text-align: center;
-      width: 100%;
-      text-shadow: 0 0 5px rgba(0, 255, 204, 0.3);
-    }
-    .close-button {
-      position: absolute;
-      right: 0;
-      top: 0;
-      background: none;
-      border: none;
-      color: var(--primary-color);
-      font-size: 20px;
-      cursor: pointer;
-      padding: 0;
-      margin-left: auto;
-      z-index: 1;
-      opacity: 0.8;
-      transition: opacity 0.2s ease;
-    }
-    .close-button:hover {
-      opacity: 1;
-    }
     .modal-body {
       color: #fff;
       margin-bottom: 12px;
@@ -431,6 +398,61 @@
       background: rgba(0, 255, 204, 0.2);
       box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
     }
+    /* Toast 彈出視窗樣式 */
+    .toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      padding: 12px 24px;
+      border-radius: 8px;
+      border: 0.5px solid var(--primary-color);
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+      z-index: 3000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      animation: toastFadeIn 0.3s ease;
+      min-width: 120px;
+      text-align: center;
+    }
+    .toast.show {
+      display: flex;
+    }
+    .toast.success {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+    }
+    .toast.error {
+      border-color: #ff3366;
+      box-shadow: 0 0 15px rgba(255, 51, 102, 0.3);
+    }
+    .toast-message {
+      color: var(--primary-color);
+      font-size: 1em;
+      font-weight: bold;
+      text-shadow: 0 0 5px rgba(0, 255, 204, 0.7);
+    }
+    .toast.success .toast-message {
+      color: var(--primary-color);
+      text-shadow: 0 0 5px rgba(0, 255, 204, 0.7);
+    }
+    .toast.error .toast-message {
+      color: #ff3366;
+      text-shadow: 0 0 5px rgba(255, 51, 102, 0.7);
+    }
+    @keyframes toastFadeIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
   </style>
   <!-- 添加 Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -443,7 +465,7 @@
         <h1 id="pageTitle" style="cursor: pointer; outline: none; padding: 5px; border-radius: 5px;" onblur="this.style.background='transparent'" onfocus="this.style.background='rgba(0, 255, 204, 0.1)'">商品名稱</h1>
 
         <!-- 未知成本 (N) -->
-        <div id="section_unknown">
+        <div>
           <!-- 單價 / 總價 -->
           <div class="price-input-group">
             <select id="price_currency" class="price-currency-select">
@@ -469,7 +491,6 @@
             <label><input type="radio" name="shipping_included" id="shipping_included_no" value="N" checked tabindex="0"> 無郵費</label>
             <label><input type="radio" name="shipping_included" id="shipping_included_yes" value="Y" tabindex="0"> 需郵費</label>
           </div>
-          <span id="shipping_included_error" class="error-message"></span>
           <input type="text" id="inland_shipping" value="">
           <span id="inland_shipping_error" class="error-message"></span>
           <span id="inland_shipping_formula_error" class="formula-error"></span>
@@ -556,6 +577,11 @@
     </div>
   </div>
 
+  <!-- Toast 彈出視窗 -->
+  <div class="toast" id="saveToast">
+    <div class="toast-message" id="toastMessage"></div>
+  </div>
+
   <script>
     // Firebase 配置
     const firebaseConfig = {
@@ -619,6 +645,79 @@
     // 快速取得常用元素
     const getById = id => document.getElementById(id);
     const resultArea = getById('result_area');
+    
+    // 工具函數：獲取URL參數和編輯模式狀態
+    const getUrlParams = () => new URLSearchParams(window.location.search);
+    const isEditMode = () => getUrlParams().has('mode') && getUrlParams().get('mode') === 'edit';
+    
+    // 工具函數：統一的貼上處理（清理格式，只保留純文字）
+    const handlePasteClean = (text) => {
+      return text.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+    };
+    
+    // 工具函數：載入Firebase設定作為預設值
+    const loadFirebaseSettings = async () => {
+      const defaults = { exchangeRate: '4.5', internationalShipping: '15', platformCommission: '5' };
+      try {
+        const settingsDoc = await db.collection('settings').doc('global').get();
+        if (settingsDoc.exists) {
+          const settings = settingsDoc.data();
+          getById('exchange_rate').value = settings.exchangeRate || defaults.exchangeRate;
+          getById('international_shipping').value = settings.internationalShipping || defaults.internationalShipping;
+          getById('platform_commission_rate_n').value = settings.platformCommission || defaults.platformCommission;
+        } else {
+          Object.entries(defaults).forEach(([key, value]) => {
+            const fieldMap = { exchangeRate: 'exchange_rate', internationalShipping: 'international_shipping', platformCommission: 'platform_commission_rate_n' };
+            getById(fieldMap[key]).value = value;
+          });
+        }
+      } catch (error) {
+        console.error("Error loading settings:", error);
+        Object.entries(defaults).forEach(([key, value]) => {
+          const fieldMap = { exchangeRate: 'exchange_rate', internationalShipping: 'international_shipping', platformCommission: 'platform_commission_rate_n' };
+          getById(fieldMap[key]).value = value;
+        });
+      }
+    };
+    
+    // 工具函數：構建當前數據對象
+    const buildCurrentData = () => {
+      const singleWeight = currentPreciseWeights.singleWeight ? parseFloat(currentPreciseWeights.singleWeight) : '';
+      const inlandShipping = getFormattedInlandShipping();
+      let purchasePrice = getById('product_price').value;
+      const priceUnit = getById('price_unit').value;
+      const quantity = parseFloat(getById('purchase_quantity').value) || 0;
+      const priceResult = processPurchasePrice(purchasePrice, priceUnit, quantity);
+      purchasePrice = priceResult.processedPrice;
+      const originalTotalPrice = priceResult.originalTotalPrice;
+      
+      return {
+        name: getById('pageTitle').textContent,
+        currency: getById('price_currency').value,
+        purchasePrice: parseFloat(purchasePrice).toFixed(6),
+        purchasePriceDisplay: formatNumber(purchasePrice),
+        priceUnit: priceUnit,
+        originalTotalPrice: originalTotalPrice,
+        quantity: parseInt(quantity),
+        inlandShipping: inlandShipping,
+        singleWeight: singleWeight ? parseFloat(singleWeight).toFixed(6) : '',
+        singleWeightDisplay: singleWeight ? formatNumber(singleWeight) : '',
+        materialCount: parseInt(getById('material_count').value) || 0,
+        actualPrice: getById('profit_margin_rate_n').value ? formatNumber(getById('profit_margin_rate_n').value, true) : '',
+        singleCost: getById('result_single_cost').textContent.replace('單價：', '').replace(' 元', ''),
+        totalCost: getById('result_total_cost').textContent.replace('總成本：', '').replace(' 元', ''),
+        suggestedPrice: getById('suggested_pricing').textContent.replace(' 元', ''),
+        profitLoss: getById('suggested_profit_loss').textContent.replace(' 元', ''),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      };
+    };
+    
+    // 工具函數：通知父視窗
+    const notifyParent = (message) => {
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage(message, '*');
+      }
+    };
 
     /**
      * evaluateFormula(str):
@@ -645,33 +744,9 @@
 
     // 修改：添加輸入事件監聽器
     window.addEventListener('DOMContentLoaded', async () => {
-      // 檢查是否為編輯模式
-      const params = new URLSearchParams(window.location.search);
-      const isEditMode = params.has('mode') && params.get('mode') === 'edit';
-      
       // 載入Firebase設定作為預設值（修改後不會同步回Firebase）
-      if (!isEditMode) {
-        try {
-          // 從Firebase載入全局設定作為預設值
-          const settingsDoc = await db.collection('settings').doc('global').get();
-          if (settingsDoc.exists) {
-            const settings = settingsDoc.data();
-            getById('exchange_rate').value = settings.exchangeRate || '4.5';
-            getById('international_shipping').value = settings.internationalShipping || '15';
-            getById('platform_commission_rate_n').value = settings.platformCommission || '5';
-          } else {
-            // 如果Firebase中沒有設定，使用固定預設值
-            getById('exchange_rate').value = '4.5';
-            getById('international_shipping').value = '15';
-            getById('platform_commission_rate_n').value = '5';
-          }
-        } catch (error) {
-          console.error("Error loading settings as default values:", error);
-          // 載入失敗時使用固定預設值
-          getById('exchange_rate').value = '4.5';
-          getById('international_shipping').value = '15';
-          getById('platform_commission_rate_n').value = '5';
-        }
+      if (!isEditMode()) {
+        await loadFirebaseSettings();
       }
 
       // 注意：輸入事件監聽器已在 attachEnterKeyListeners 中統一處理
@@ -790,70 +865,41 @@
       await checkEditMode();
       
       // 編輯模式載入完成後，再初始化其他功能
-      // 這樣可以確保編輯模式的數據不會被覆蓋
-      if (!params.has('mode') || params.get('mode') !== 'edit') {
-        // 非編輯模式下的初始化
+      if (!isEditMode()) {
         handleCurrencyMode();
         handleShippingMode();
         calculate();
-      }
-      
-      // 總是需要附加事件監聽器
-      attachEnterKeyListeners();
-      
-      // 非編輯模式下聚焦到第一個輸入框
-      if (!params.has('mode') || params.get('mode') !== 'edit') {
         getById('product_price').focus();
       }
+      
+      attachEnterKeyListeners();
 
-      // 新增：為商品名稱添加貼上事件監聽器 - 清理格式，只保留純文字
-      const pageTitle = getById('pageTitle');
-      if (pageTitle) {
-        pageTitle.addEventListener('paste', function(e) {
+      // 統一的貼上處理：為商品名稱和輸入框添加貼上事件監聽器
+      const setupPasteHandler = (element, isInput = false) => {
+        if (!element) return;
+        element.addEventListener('paste', function(e) {
           e.preventDefault();
-          
-          // 取得貼上的純文字內容
           const paste = (e.clipboardData || window.clipboardData).getData('text');
-          
-          // 清理文字：移除換行符、多餘空格，只保留純文字
-          const cleanText = paste.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
-          
+          const cleanText = handlePasteClean(paste);
           if (cleanText) {
-            // 直接設置純文字內容
-            this.textContent = cleanText;
-            
-            // 將游標移到最後
-            const range = document.createRange();
-            const sel = window.getSelection();
-            range.selectNodeContents(this);
-            range.collapse(false);
-            sel.removeAllRanges();
-            sel.addRange(range);
+            if (isInput) {
+              this.value = cleanText;
+              this.setSelectionRange(cleanText.length, cleanText.length);
+            } else {
+              this.textContent = cleanText;
+              const range = document.createRange();
+              const sel = window.getSelection();
+              range.selectNodeContents(this);
+              range.collapse(false);
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
           }
         });
-      }
-
-      // 為 productNameInput 添加貼上事件監聽器
-      const productNameInput = getById('productNameInput');
-      if (productNameInput) {
-        productNameInput.addEventListener('paste', function(e) {
-          e.preventDefault();
-          
-          // 取得貼上的純文字內容
-          const paste = (e.clipboardData || window.clipboardData).getData('text');
-          
-          // 清理文字：移除換行符、多餘空格，只保留純文字
-          const cleanText = paste.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
-          
-          if (cleanText) {
-            // 直接設置為輸入框的值
-            this.value = cleanText;
-            
-            // 將游標移到最後
-            this.setSelectionRange(cleanText.length, cleanText.length);
-          }
-        });
-      }
+      };
+      
+      setupPasteHandler(getById('pageTitle'));
+      setupPasteHandler(getById('productNameInput'), true);
 
       /* --- 設定欄位已改為只讀模式，由 Products.html 控制 --- */
     });
@@ -872,67 +918,24 @@
     }
 
     // 編輯模式下的自動保存函數（立即保存）
-    let isSaving = false; // 防止重複保存的標記
-    let lastChangedElement = null; // 追蹤最後變更的元素
+    let isSaving = false;
+    let lastChangedElement = null;
     const autoSaveInEditMode = async () => {
-      const params = new URLSearchParams(window.location.search);
-      if (params.has('mode') && params.get('mode') === 'edit' && !isSaving) {
+      if (isEditMode() && !isSaving) {
         try {
-          isSaving = true; // 設置保存中標記
+          isSaving = true;
+          const params = getUrlParams();
           const editData = JSON.parse(decodeURIComponent(params.get('data')));
+          const currentData = buildCurrentData();
           
-          // 使用高精度的單重數據
-          const singleWeight = currentPreciseWeights.singleWeight ? 
-            parseFloat(currentPreciseWeights.singleWeight) : '';
-          
-          // 處理內地運費
-          const inlandShipping = getFormattedInlandShipping();
-
-          // 處理採購價格（總價轉單價）
-          let purchasePrice = getById('product_price').value;
-          const priceUnit = getById('price_unit').value;
-          const quantity = parseFloat(getById('purchase_quantity').value) || 0;
-          const priceResult = processPurchasePrice(purchasePrice, priceUnit, quantity);
-          purchasePrice = priceResult.processedPrice;
-          const originalTotalPrice = priceResult.originalTotalPrice;
-          
-          const currentData = {
-            name: getById('pageTitle').textContent,
-            currency: getById('price_currency').value,
-            purchasePrice: parseFloat(purchasePrice).toFixed(6),
-            purchasePriceDisplay: formatNumber(purchasePrice),
-            priceUnit: priceUnit,
-            originalTotalPrice: originalTotalPrice,
-            quantity: parseInt(quantity),
-            inlandShipping: inlandShipping,
-            singleWeight: singleWeight ? parseFloat(singleWeight).toFixed(6) : '',
-            singleWeightDisplay: singleWeight ? formatNumber(singleWeight) : '',
-            materialCount: parseInt(getById('material_count').value) || 0,
-            actualPrice: getById('profit_margin_rate_n').value ? formatNumber(getById('profit_margin_rate_n').value, true) : '',
-            singleCost: getById('result_single_cost').textContent.replace('單價：', '').replace(' 元', ''),
-            totalCost: getById('result_total_cost').textContent.replace('總成本：', '').replace(' 元', ''),
-            suggestedPrice: getById('suggested_pricing').textContent.replace(' 元', ''),
-            profitLoss: getById('suggested_profit_loss').textContent.replace(' 元', ''),
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          };
-
-          // 自動保存到 Firebase
           await db.collection('products').doc(editData.id).update(currentData);
-          
-          // 通知父視窗更新
-          if (window.opener && !window.opener.closed) {
-            window.opener.postMessage({
-              type: 'calculationComplete',
-              product: currentData
-            }, '*');
-          }
-
+          notifyParent({ type: 'calculationComplete', product: currentData });
           showDataChangeStatus(lastChangedElement, 'saved');
         } catch (error) {
           console.error('自動保存錯誤:', error);
           showDataChangeStatus(lastChangedElement, 'error');
         } finally {
-          isSaving = false; // 重置保存中標記
+          isSaving = false;
         }
       }
     };
@@ -1227,52 +1230,10 @@
         updateResultDisplay(calculationResult);
 
         // 如果是編輯模式，更新數據
-        const params = new URLSearchParams(window.location.search);
-        if (params.has('mode') && params.get('mode') === 'edit') {
-          // 從全局變量獲取高精度的單重數據（總重由系統自動計算，不需保存）
-          const singleWeight = currentPreciseWeights.singleWeight ? 
-            parseFloat(currentPreciseWeights.singleWeight) : '';
-          
-          // 處理內地運費
-          const inlandShipping = getFormattedInlandShipping();
-
-          // 處理採購價格（總價轉單價）
-          let purchasePrice = getById('product_price').value;
-          const priceUnit = getById('price_unit').value;
-          const quantity = parseFloat(getById('purchase_quantity').value) || 0;
-          const priceResult = processPurchasePrice(purchasePrice, priceUnit, quantity);
-          purchasePrice = priceResult.processedPrice;
-          const originalTotalPrice = priceResult.originalTotalPrice;
-          
-          const currentData = {
-            name: getById('pageTitle').textContent,
-            currency: getById('price_currency').value,
-            purchasePrice: parseFloat(purchasePrice).toFixed(6),  // 使用高精度保存單價
-            purchasePriceDisplay: formatNumber(purchasePrice),  // 顯示用2位小數
-            priceUnit: priceUnit,  // 保存價格單位模式
-            originalTotalPrice: originalTotalPrice,  // 保存原始總價（如果是總價模式）
-            quantity: parseInt(quantity),
-            inlandShipping: inlandShipping,
-            // 只儲存單重，總重由系統根據單重×數量自動計算
-            singleWeight: singleWeight ? parseFloat(singleWeight).toFixed(6) : '',  // 改為6位小數
-            singleWeightDisplay: singleWeight ? formatNumber(singleWeight) : '',  // 顯示用2位小數
-            materialCount: parseInt(getById('material_count').value) || 0,
-            actualPrice: getById('profit_margin_rate_n').value ? formatNumber(getById('profit_margin_rate_n').value, true) : '',
-            singleCost: getById('result_single_cost').textContent.replace('單價：', '').replace(' 元', ''),
-            totalCost: getById('result_total_cost').textContent.replace('總成本：', '').replace(' 元', ''),
-            suggestedPrice: getById('suggested_pricing').textContent.replace(' 元', ''),
-            profitLoss: getById('suggested_profit_loss').textContent.replace(' 元', ''),
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          };
-
+        if (isEditMode()) {
+          const currentData = buildCurrentData();
           localStorage.setItem('updatedProductData', JSON.stringify(currentData));
-          
-          if (window.opener && !window.opener.closed) {
-            window.opener.postMessage({
-              type: 'calculationComplete',
-              product: currentData
-            }, '*');
-          }
+          notifyParent({ type: 'calculationComplete', product: currentData });
         }
 
       } catch (error) {
@@ -1287,12 +1248,9 @@
 
     // 依幣別切換顯示欄位
     const handleCurrencyMode = async () => {
-      // 檢查是否為編輯模式
-      const params = new URLSearchParams(window.location.search);
-      const isEditMode = params.has('mode') && params.get('mode') === 'edit';
       
       // 編輯模式下強制使用 CNY
-      if (isEditMode) {
+      if (isEditMode()) {
         getById('price_currency').value = 'CNY';
         getById('price_currency').disabled = true;
         getById('price_currency').style.opacity = '0.5';
@@ -1458,11 +1416,9 @@
         }
         
         // 顯示所有按鈕（除非是編輯模式）
-        const params = new URLSearchParams(window.location.search);
-        const isEditMode = params.has('mode') && params.get('mode') === 'edit';
         const saveButton = document.querySelector('button[onclick="saveToFirestore()"]');
         if (saveButton) {
-          saveButton.style.display = isEditMode ? 'none' : 'block';
+          saveButton.style.display = isEditMode() ? 'none' : 'block';
         }
         const viewButton = document.querySelector('button[onclick="viewInProducts()"]');
         if (viewButton) {
@@ -1524,10 +1480,6 @@
 
     // 動態建立跳欄順序
     const getFlowOrder = () => {
-      // 檢查是否為編輯模式
-      const params = new URLSearchParams(window.location.search);
-      const isEditMode = params.has('mode') && params.get('mode') === 'edit';
-      
       let flow = [
         getById('product_price'),
         getById('purchase_quantity')
@@ -1867,9 +1819,10 @@
               return;
             }
             
-            // 處理 Backspace 和 Delete 鍵事件
-            if (event.key === 'Backspace' || event.key === 'Delete') {
+            // 處理 Delete 鍵事件（全部刪除）
+            if (event.key === 'Delete') {
               if (elem.type === 'text') {
+                event.preventDefault(); // 阻止默認的刪除行為
                 elem.value = '';
                 const formulaError = getById(elem.id + '_formula_error');
                 if (formulaError) formulaError.innerText = '';
@@ -1881,6 +1834,7 @@
                 autoSaveInEditMode();
               }
             }
+            // Backspace 鍵使用默認行為（逐一刪除），不進行特殊處理
           });
         }
       });
@@ -1903,8 +1857,8 @@
 
     // 修改：檢查是否為編輯模式
     const checkEditMode = async () => {
-      const params = new URLSearchParams(window.location.search);
-      if (params.has('mode') && params.get('mode') === 'edit') {
+      if (isEditMode()) {
+        const params = getUrlParams();
         try {
           // 解碼並解析數據
           const editData = JSON.parse(decodeURIComponent(params.get('data')));
@@ -1974,27 +1928,7 @@
           }
           
           // 編輯模式下載入Firebase設定作為預設值
-          try {
-            // 從Firebase載入全局設定作為預設值
-            const settingsDoc = await db.collection('settings').doc('global').get();
-            if (settingsDoc.exists) {
-              const settings = settingsDoc.data();
-              getById('exchange_rate').value = settings.exchangeRate || '4.5';
-              getById('international_shipping').value = settings.internationalShipping || '15';
-              getById('platform_commission_rate_n').value = settings.platformCommission || '5';
-            } else {
-              // 如果Firebase中沒有設定，使用固定預設值
-              getById('exchange_rate').value = '4.5';
-              getById('international_shipping').value = '15';
-              getById('platform_commission_rate_n').value = '5';
-            }
-          } catch (error) {
-            console.error("Error loading settings as default values in edit mode:", error);
-            // 載入失敗時使用固定預設值
-            getById('exchange_rate').value = '4.5';
-            getById('international_shipping').value = '15';
-            getById('platform_commission_rate_n').value = '5';
-          }
+          await loadFirebaseSettings();
           
           if (editData.actualPrice) {
             getById('profit_margin_rate_n').value = formatNumber(editData.actualPrice, true);
@@ -2024,16 +1958,11 @@
     
     // 點擊事件
     pageTitle.addEventListener('click', function(e) {
-      // 檢查是否為 NTD 模式
       const isNTD = getById('price_currency').value === 'NTD';
-      // 檢查是否為編輯模式
-      const params = new URLSearchParams(window.location.search);
-      const isEditMode = params.has('mode') && params.get('mode') === 'edit';
       
       if (isNTD) {
-        // NTD 模式下重新整理頁面
         window.location.reload();
-      } else if (!isTitleEditing && !isEditMode) {
+      } else if (!isTitleEditing && !isEditMode()) {
         // CNY 模式且非編輯模式下保持原有的編輯功能（清空內容）
         originalTitle = this.textContent;
         this.innerHTML = '';
@@ -2045,7 +1974,7 @@
         range.collapse(false);
         sel.removeAllRanges();
         sel.addRange(range);
-      } else if (isEditMode && !isTitleEditing) {
+      } else if (isEditMode() && !isTitleEditing) {
         // 編輯模式下不清空內容，只進入編輯狀態
         originalTitle = this.textContent;
         isTitleEditing = true;
@@ -2072,9 +2001,7 @@
           isTitleEditing = false;
           
           // 編輯模式下觸發自動保存（如果內容有變更）
-          const params = new URLSearchParams(window.location.search);
-          const isEditMode = params.has('mode') && params.get('mode') === 'edit';
-          if (isEditMode && this.textContent.trim() !== originalTitle) {
+          if (isEditMode() && this.textContent.trim() !== originalTitle) {
             lastChangedElement = this; // 標題不在排除列表中
             autoSaveInEditMode();
           }
@@ -2109,9 +2036,7 @@
         isTitleEditing = false;
         
         // 編輯模式下觸發自動保存（如果內容有變更）
-        const params = new URLSearchParams(window.location.search);
-        const isEditMode = params.has('mode') && params.get('mode') === 'edit';
-        if (isEditMode && this.textContent.trim() !== originalTitle) {
+        if (isEditMode() && this.textContent.trim() !== originalTitle) {
           lastChangedElement = this; // 標題不在排除列表中
           autoSaveInEditMode();
         }
@@ -2122,24 +2047,16 @@
 
     // 修改：保存到 Firestore
     async function saveToFirestore() {
-      // 檢查是否為編輯模式
-      const params = new URLSearchParams(window.location.search);
       const currentTitle = getById('pageTitle').textContent.trim();
       
-      if (params.has('mode') && params.get('mode') === 'edit') {
-        // 編輯模式下直接保存
+      if (isEditMode()) {
         await confirmSave();
+      } else if (currentTitle === '商品名稱' || currentTitle === '') {
+        getById('nameModal').classList.add('show');
+        getById('productNameInput').value = '';
+        getById('productNameInput').focus();
       } else {
-        // 新增模式下檢查標題是否已更改
-        if (currentTitle === '商品名稱' || currentTitle === '') {
-          // 如果標題未更改或為空，顯示商品名稱輸入視窗
-          getById('nameModal').style.display = 'block';
-          getById('productNameInput').value = ''; // 預設為空白
-          getById('productNameInput').focus();
-        } else {
-          // 如果標題已更改，直接保存
-          await confirmSave();
-        }
+        await confirmSave();
       }
     }
 
@@ -2151,66 +2068,62 @@
       
       if (!forceClose && currentName && currentName !== getById('pageTitle').textContent) {
         if (confirm('您有未保存的更改，確定要關閉嗎？')) {
-          getById('nameModal').style.display = 'none';
+          getById('nameModal').classList.remove('show');
           productNameInput.value = '';
         }
       } else {
-        getById('nameModal').style.display = 'none';
+        getById('nameModal').classList.remove('show');
         productNameInput.value = '';
       }
     }
 
+    // 顯示 Toast 彈出視窗
+    function showToast(message, isSuccess = true) {
+      const toast = getById('saveToast');
+      const toastMessage = getById('toastMessage');
+      
+      // 設置訊息
+      toastMessage.textContent = message;
+      
+      // 設置樣式類別
+      toast.className = 'toast';
+      if (isSuccess) {
+        toast.classList.add('success');
+      } else {
+        toast.classList.add('error');
+      }
+      
+      // 顯示 Toast
+      toast.classList.add('show');
+      
+      // 1秒後自動關閉
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 1000);
+    }
+
+    // 工具函數：保存成功後的處理
+    const handleSaveSuccess = (redirect = false) => {
+      showToast('保存成功', true);
+      if (redirect) {
+        setTimeout(() => window.location.href = 'Products.html', 1000);
+      }
+    };
+    
     // 修改：確認保存
     async function confirmSave() {
       try {
-        const params = new URLSearchParams(window.location.search);
-        const isEditMode = params.has('mode') && params.get('mode') === 'edit';
         const currentTitle = getById('pageTitle').textContent.trim();
-        
-        // 使用高精度的單重數據（總重由系統自動計算，不需保存）
-        const singleWeight = currentPreciseWeights.singleWeight ? 
-          parseFloat(currentPreciseWeights.singleWeight) : '';
-        
-        // 處理內地運費
-        const inlandShipping = getFormattedInlandShipping();
+        const currentData = buildCurrentData();
+        currentData.name = isEditMode() ? currentTitle : (currentTitle !== '商品名稱' ? currentTitle : getById('productNameInput').value.trim());
 
-        // 處理採購價格（總價轉單價）
-        let purchasePrice = getById('product_price').value;
-        const priceUnit = getById('price_unit').value;
-        const quantity = parseFloat(getById('purchase_quantity').value) || 0;
-        const priceResult = processPurchasePrice(purchasePrice, priceUnit, quantity);
-        purchasePrice = priceResult.processedPrice;
-        const originalTotalPrice = priceResult.originalTotalPrice;
-        
-        // 收集當前數據，確保所有數值都是正確的格式
-        const currentData = {
-          name: isEditMode ? currentTitle : (currentTitle !== '商品名稱' ? currentTitle : getById('productNameInput').value.trim()),
-          currency: getById('price_currency').value,
-          purchasePrice: parseFloat(purchasePrice).toFixed(6),  // 使用高精度保存單價
-          purchasePriceDisplay: formatNumber(purchasePrice),  // 顯示用2位小數
-          priceUnit: priceUnit,  // 保存價格單位模式
-          originalTotalPrice: originalTotalPrice,  // 保存原始總價（如果是總價模式）
-          quantity: parseInt(getById('purchase_quantity').value) || 0,
-          inlandShipping: inlandShipping,
-          // 只儲存單重，總重由系統根據單重×數量自動計算
-          singleWeight: singleWeight ? parseFloat(singleWeight).toFixed(6) : '',  // 改為6位小數
-          singleWeightDisplay: singleWeight ? formatNumber(singleWeight) : '',  // 顯示用2位小數
-          materialCount: parseInt(getById('material_count').value) || 0,
-          actualPrice: getById('profit_margin_rate_n').value ? formatNumber(getById('profit_margin_rate_n').value, true) : '',
-          singleCost: getById('result_single_cost').textContent.replace('單價：', '').replace(' 元', ''),
-          totalCost: getById('result_total_cost').textContent.replace('總成本：', '').replace(' 元', ''),
-          suggestedPrice: getById('suggested_pricing').textContent.replace(' 元', ''),
-          profitLoss: getById('suggested_profit_loss').textContent.replace(' 元', ''),
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        if (!isEditMode && !currentData.name) {
-          alert('請輸入商品名稱');
+        if (!isEditMode() && !currentData.name) {
+          showToast('請輸入商品名稱', false);
           return;
         }
 
-        if (isEditMode) {
-          // 更新現有商品
+        if (isEditMode()) {
+          const params = getUrlParams();
           const editData = JSON.parse(params.get('data'));
           
           // 檢查是否需要更新文檔ID（如果商品名稱變更且用戶確認）
@@ -2229,59 +2142,49 @@
                 // 刪除舊文檔
                 await db.collection('products').doc(editData.id).delete();
                 
-                // 通知 Products.html 商品ID已變更
-                if (window.opener && !window.opener.closed) {
-                  window.opener.postMessage({
-                    type: 'updateProductId',
-                    oldId: editData.id,
-                    newId: newDocId,
-                    product: currentData
-                  }, '*');
-                }
-                
-                alert('商品名稱和文檔ID已成功更新！');
+                notifyParent({ type: 'updateProductId', oldId: editData.id, newId: newDocId, product: currentData });
+                handleSaveSuccess(true);
+                return;
               } catch (error) {
                 console.error('更新文檔ID時發生錯誤:', error);
                 // 如果失敗，回退到僅更新名稱
-                await db.collection('products').doc(editData.id).update(currentData);
-                
-                if (window.opener && !window.opener.closed) {
-                  window.opener.postMessage({
-                    type: 'updateProductName',
-                    productId: editData.id,
-                    newName: currentData.name
-                  }, '*');
+                try {
+                  await db.collection('products').doc(editData.id).update(currentData);
+                  
+                  notifyParent({ type: 'updateProductName', productId: editData.id, newName: currentData.name });
+                  handleSaveSuccess(true);
+                  return;
+                } catch (updateError) {
+                  showToast('保存失敗', false);
+                  return;
                 }
-                
-                alert('文檔ID更新失敗，已回退到僅更新商品名稱');
               }
             } else {
               // 僅更新商品資料，保持原文檔ID
-              await db.collection('products').doc(editData.id).update(currentData);
-              
-              if (window.opener && !window.opener.closed) {
-                window.opener.postMessage({
-                  type: 'updateProductName',
-                  productId: editData.id,
-                  newName: currentData.name
-                }, '*');
+              try {
+                await db.collection('products').doc(editData.id).update(currentData);
+                
+                notifyParent({ type: 'updateProductName', productId: editData.id, newName: currentData.name });
+                handleSaveSuccess(true);
+                return;
+              } catch (error) {
+                showToast('保存失敗', false);
+                return;
               }
             }
           } else {
             // 名稱未變更，正常更新
-            await db.collection('products').doc(editData.id).update(currentData);
-            
-            if (window.opener && !window.opener.closed) {
-              window.opener.postMessage({
-                type: 'updateProductName',
-                productId: editData.id,
-                newName: currentData.name
-              }, '*');
+            try {
+              await db.collection('products').doc(editData.id).update(currentData);
+              
+              notifyParent({ type: 'updateProductName', productId: editData.id, newName: currentData.name });
+              handleSaveSuccess(true);
+              return;
+            } catch (error) {
+              showToast('保存失敗', false);
+              return;
             }
           }
-          
-          // 返回商品總表
-          window.location.href = 'Products.html';
         } else {
           // 新增商品
           // 生成安全的文檔ID（基於商品名稱）
@@ -2291,30 +2194,19 @@
             // 使用自訂文檔ID保存
             await db.collection('products').doc(safeDocId).set(currentData);
             
-            // 通知 Products.html 新增商品
-            if (window.opener && !window.opener.closed) {
-              window.opener.postMessage({
-                type: 'addNewProduct',
-                product: {
-                  id: safeDocId,
-                  ...currentData
-                }
-              }, '*');
-            }
+            notifyParent({ type: 'addNewProduct', product: { id: safeDocId, ...currentData } });
+            handleSaveSuccess();
           } catch (error) {
-            // 如果文檔ID已存在，使用帶時間戳的版本
-            const timestampedId = `${safeDocId}_${Date.now()}`;
-            await db.collection('products').doc(timestampedId).set(currentData);
-            
-            // 通知 Products.html 新增商品
-            if (window.opener && !window.opener.closed) {
-              window.opener.postMessage({
-                type: 'addNewProduct',
-                product: {
-                  id: timestampedId,
-                  ...currentData
-                }
-              }, '*');
+            try {
+              // 如果文檔ID已存在，使用帶時間戳的版本
+              const timestampedId = `${safeDocId}_${Date.now()}`;
+              await db.collection('products').doc(timestampedId).set(currentData);
+              
+              notifyParent({ type: 'addNewProduct', product: { id: timestampedId, ...currentData } });
+              handleSaveSuccess();
+            } catch (secondError) {
+              showToast('保存失敗', false);
+              return;
             }
           }
           
@@ -2333,7 +2225,7 @@
         closeNameModal(true);
       } catch (error) {
         console.error("Error saving to Firestore:", error);
-        alert("保存時發生錯誤");
+        showToast('保存失敗', false);
       }
     }
 
