@@ -2758,6 +2758,17 @@
                     cell.appendChild(input);
                     input.focus();
 
+                    // 用於保存輸入前的狀態
+                    let beforeInputState = { value: '', cursorPos: 0 };
+
+                    // 使用 beforeinput 事件保存輸入前的狀態
+                    input.addEventListener('beforeinput', function(e) {
+                        beforeInputState = {
+                            value: this.value,
+                            cursorPos: this.selectionStart !== null ? this.selectionStart : this.value.length
+                        };
+                    });
+
                     // 添加鍵盤事件監聽器
                     input.addEventListener('keydown', async function(e) {
                         // 處理 Delete 鍵：清空整個輸入框
@@ -2790,19 +2801,61 @@
 
                     // 添加輸入事件監聽器
                     input.addEventListener('input', function() {
+                        // 保存當前的值和游標位置
+                        const oldValue = this.value;
+                        const inputCursorPos = this.selectionStart !== null ? this.selectionStart : this.value.length;
+                        
                         // 只允許數字和小數點
-                        this.value = this.value.replace(/[^\d.]/g, '');
+                        let newValue = oldValue.replace(/[^\d.]/g, '');
+                        
+                        // 計算新游標位置：基於輸入前的游標位置和輸入的字符
+                        let newCursorPos = inputCursorPos;
+                        
+                        // 計算游標前被移除的非法字符數
+                        let removedCount = 0;
+                        for (let i = 0; i < Math.min(inputCursorPos, oldValue.length); i++) {
+                            if (!/[\d.]/.test(oldValue[i])) {
+                                removedCount++;
+                            }
+                        }
+                        newCursorPos = inputCursorPos - removedCount;
                         
                         // 防止多個小數點
-                        const parts = this.value.split('.');
+                        const parts = newValue.split('.');
                         if (parts.length > 2) {
-                            this.value = parts[0] + '.' + parts.slice(1).join('');
+                            newValue = parts[0] + '.' + parts.slice(1).join('');
+                            // 如果有多個小數點，確保游標在第一個小數點之後的合理位置
+                            const firstDotPos = newValue.indexOf('.');
+                            if (newCursorPos <= firstDotPos) {
+                                newCursorPos = firstDotPos + 1;
+                            } else {
+                                // 游標在第一個小數點之後，保持相對位置但確保不超過長度
+                                newCursorPos = Math.min(newCursorPos, newValue.length);
+                            }
                         }
                         
                         // 限制小數點後兩位
                         if (parts.length === 2 && parts[1].length > 2) {
-                            this.value = parts[0] + '.' + parts[1].substring(0, 2);
+                            newValue = parts[0] + '.' + parts[1].substring(0, 2);
+                            newCursorPos = Math.min(newCursorPos, newValue.length);
                         }
+                        
+                        // 更新值
+                        if (oldValue !== newValue) {
+                            this.value = newValue;
+                        }
+                        
+                        // 恢復游標位置
+                        setTimeout(() => {
+                            try {
+                                newCursorPos = Math.max(0, Math.min(newCursorPos, this.value.length));
+                                if (this.setSelectionRange) {
+                                    this.setSelectionRange(newCursorPos, newCursorPos);
+                                }
+                            } catch (e) {
+                                // 忽略錯誤
+                            }
+                        }, 0);
                     });
                     
                     // 处理输入框事件
@@ -3251,21 +3304,85 @@
 
                     // 添加輸入事件監聽器，實現即時更新
                     input.addEventListener('input', debounce(async function() {
+                        // 保存當前的游標位置和值
+                        const cursorPos = this.selectionStart !== null ? this.selectionStart : this.value.length;
+                        const oldValue = this.value;
+                        
                         // 只允許數字和小數點
-                        this.value = this.value.replace(/[^\d.]/g, '');
+                        let newValue = oldValue.replace(/[^\d.]/g, '');
+                        
+                        // 計算游標位置偏移（計算游標前被移除的非法字符數）
+                        let removedBeforeCursor = 0;
+                        for (let i = 0; i < Math.min(cursorPos, oldValue.length); i++) {
+                            if (!/[\d.]/.test(oldValue[i])) {
+                                removedBeforeCursor++;
+                            }
+                        }
+                        let newCursorPos = Math.max(0, cursorPos - removedBeforeCursor);
                         
                         // 防止多個小數點
-                        const parts = this.value.split('.');
+                        const parts = newValue.split('.');
                         if (parts.length > 2) {
-                            this.value = parts[0] + '.' + parts.slice(1).join('');
+                            const beforeDots = newValue;
+                            newValue = parts[0] + '.' + parts.slice(1).join('');
+                            // 如果有多個小數點被移除，調整游標位置
+                            if (beforeDots !== newValue) {
+                                const firstDotPos = newValue.indexOf('.');
+                                if (newCursorPos > firstDotPos) {
+                                    // 游標在第一個小數點之後，需要調整
+                                    // 計算被移除的小數點數量（在游標之前的）
+                                    let dotsRemovedBeforeCursor = 0;
+                                    let currentPos = firstDotPos + 1;
+                                    for (let i = 1; i < parts.length - 1; i++) {
+                                        const nextDotPos = currentPos + parts[i].length;
+                                        if (nextDotPos < cursorPos) {
+                                            dotsRemovedBeforeCursor++;
+                                        }
+                                        currentPos = nextDotPos + 1;
+                                    }
+                                    newCursorPos = Math.max(firstDotPos + 1, newCursorPos - dotsRemovedBeforeCursor);
+                                }
+                            }
                         }
                         
                         // 所有輸入框統一限制小數點後三位
                         const maxDecimals = 3;
                         if (parts.length === 2 && parts[1].length > maxDecimals) {
+                            const beforeLimit = newValue;
                             // 所有輸入框都使用四捨五入
-                            const num = parseFloat(this.value);
-                            this.value = num.toFixed(maxDecimals);
+                            const num = parseFloat(newValue);
+                            newValue = num.toFixed(maxDecimals);
+                            // 如果小數位數被截斷，調整游標位置
+                            if (beforeLimit !== newValue && newCursorPos > newValue.length) {
+                                newCursorPos = newValue.length;
+                            }
+                        }
+                        
+                        // 只在值實際改變時才更新，避免不必要的游標重置
+                        if (oldValue !== newValue) {
+                            this.value = newValue;
+                            // 恢復游標位置（使用 requestAnimationFrame 確保 DOM 更新後執行）
+                            requestAnimationFrame(() => {
+                                try {
+                                    newCursorPos = Math.max(0, Math.min(newCursorPos, this.value.length));
+                                    if (this.setSelectionRange) {
+                                        this.setSelectionRange(newCursorPos, newCursorPos);
+                                    }
+                                } catch (e) {
+                                    // 某些情況下 setSelectionRange 可能不可用，忽略錯誤
+                                }
+                            });
+                        } else {
+                            // 即使值沒變，也要確保游標位置正確（防止瀏覽器重置）
+                            requestAnimationFrame(() => {
+                                try {
+                                    if (this.setSelectionRange && this.selectionStart !== cursorPos) {
+                                        this.setSelectionRange(cursorPos, cursorPos);
+                                    }
+                                } catch (e) {
+                                    // 忽略錯誤
+                                }
+                            });
                         }
                     }, 100));
                 }
