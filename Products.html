@@ -20,13 +20,6 @@
             font-family: 'Arial', sans-serif;
         }
 
-        /* 行動裝置優化 */
-        @media (max-width: 768px) {
-            body {
-                padding: 10px 5px;
-            }
-        }
-
         .container {
             max-width: 1800px;
             margin: 0 auto;
@@ -35,16 +28,6 @@
             padding: 12px;
             backdrop-filter: blur(10px);
             box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
-        }
-
-        /* 行動裝置容器調整 */
-        @media (max-width: 768px) {
-            .container {
-                padding: 8px;
-                border-radius: 8px;
-                max-width: 100%;
-                margin: 0;
-            }
         }
 
         .title-container {
@@ -76,8 +59,7 @@
             transform: scale(1.05);
         }
 
-        h1::before,
-        h1::after {
+        h1::before, h1::after {
             content: '';
             position: absolute;
             width: 0;
@@ -85,24 +67,9 @@
             background: var(--primary-color);
             transition: width 0.3s ease;
         }
-
-        h1::before {
-            top: 0;
-            left: 0;
-        }
-
-        h1::after {
-            bottom: 0;
-            right: 0;
-        }
-
-        h1:hover::before,
-        h1:hover::after {
-            width: 100%;
-        }
-
-
-
+        h1::before { top: 0; left: 0; }
+        h1::after { bottom: 0; right: 0; }
+        h1:hover::before, h1:hover::after { width: 100%; }
         .table-container {
             margin-top: 12px;
             width: 100%;
@@ -110,15 +77,6 @@
             overflow-y: auto;
             position: relative;
             padding-bottom: 0;
-        }
-
-        /* 行動裝置表格容器調整 */
-        @media (max-width: 768px) {
-            .table-container {
-                max-height: calc(100vh - 220px);
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
         }
 
         table {
@@ -129,14 +87,6 @@
             margin-bottom: 0;
             background: rgba(0, 0, 0, 0.5);
             border-radius: 8px;
-        }
-
-        /* 行動裝置表格調整 */
-        @media (max-width: 768px) {
-            table {
-                min-width: 1200px; /* 確保表格有足夠寬度 */
-                table-layout: auto;
-            }
         }
 
         th {
@@ -155,43 +105,15 @@
             opacity: 1;  /* 確保完全不透明 */
         }
 
-        /* 確保表頭在滾動時保持固定 */
-        thead {
+        thead, thead tr, .simplified-view th, .simplified-view thead, .simplified-view thead tr {
             position: sticky;
             top: 0;
             z-index: 10;
-            background: rgb(15, 12, 41) !important;  /* 強制不透明背景 */
+            background: rgb(15, 12, 41) !important;
         }
-
-        thead tr {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background: rgb(15, 12, 41) !important;  /* 強制不透明背景 */
-        }
-
-        /* 簡易模式下的表頭樣式 */
         .simplified-view th {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background: rgb(15, 12, 41) !important;  /* 強制不透明背景 */
-            backdrop-filter: none;  /* 移除任何背景濾鏡效果 */
-            opacity: 1;  /* 確保完全不透明 */
-        }
-
-        .simplified-view thead {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background: rgb(15, 12, 41) !important;  /* 強制不透明背景 */
-        }
-
-        .simplified-view thead tr {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background: rgb(15, 12, 41) !important;  /* 強制不透明背景 */
+            backdrop-filter: none;
+            opacity: 1;
         }
 
         td {
@@ -221,6 +143,26 @@
         .pagination button {
             min-width: 32px;
             height: 28px;
+        }
+        .pagination button.active {
+            background: rgba(0, 255, 204, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+        }
+        .password-input {
+            width: 100%;
+            padding: 8px;
+            background: rgba(0, 255, 204, 0.1);
+            border: 1px solid var(--primary-color);
+            border-radius: 4px;
+            color: var(--primary-color);
+            font-size: 1em;
+            text-align: center;
+            letter-spacing: 4px;
+        }
+        .password-input:focus {
+            outline: none;
+            background: rgba(0, 255, 204, 0.15);
+            box-shadow: 0 0 8px rgba(0, 255, 204, 0.2);
         }
 
         /* 優化滾動條樣式 */
@@ -302,8 +244,6 @@
             width: auto !important;
             min-width: 30px !important;
         }
-
-        /* 確保輸入框樣式不被覆蓋 */
         .action-buttons .right-settings input[type="number"] {
             width: auto !important;
             min-width: 45px !important;
@@ -393,7 +333,6 @@
             width: auto;
             min-width: 30px;
         }
-
         .right-settings {
             display: flex;
             gap: 8px;
@@ -401,7 +340,6 @@
             flex-wrap: nowrap;
         }
 
-        /* 移除數字輸入框的上下箭頭 */
         input[type="number"]::-webkit-inner-spin-button,
         input[type="number"]::-webkit-outer-spin-button {
             -webkit-appearance: none;
@@ -490,22 +428,8 @@
         }
 
 
-        /* 設置各列的寬度 */
-        th:nth-child(1), td:nth-child(1) { width: 30%; text-align: center; } /* 商品名稱 */
-        th:nth-child(2), td:nth-child(2) { width: 6.36%; text-align: center; }  /* 採購價格 */
-        th:nth-child(3), td:nth-child(3) { width: 6.36%; text-align: center; }  /* 採購數量 */
-        th:nth-child(4), td:nth-child(4) { width: 6.36%; text-align: center; }  /* 內地運費 */
-        th:nth-child(5), td:nth-child(5) { width: 6.36%; text-align: center; }  /* 單重 */
-        th:nth-child(6), td:nth-child(6) { width: 6.36%; text-align: center; }  /* 總重 */
-        th:nth-child(7), td:nth-child(7) { width: 6.36%; text-align: center; }  /* 計材 */
-        th:nth-child(8), td:nth-child(8) { width: 6.36%; text-align: center; }  /* 單價成本 */
-        th:nth-child(9), td:nth-child(9) { width: 6.36%; text-align: center; }  /* 採購總成本 */
-        th:nth-child(10), td:nth-child(10) { width: 6.36%; text-align: center; } /* 建議定價 */
-        th:nth-child(11), td:nth-child(11) { width: 6.36%; text-align: center; } /* 實際定價 */
-        th:nth-child(12), td:nth-child(12) { width: 6.36%; text-align: center; } /* 定價損益 */
-        th:nth-child(13), td:nth-child(13) { width: 6.36%; text-align: center; } /* 定價總損益 */
-        th:nth-child(14), td:nth-child(14) { width: 6.36%; text-align: center; } /* 定價毛利率 */
-        th:nth-child(15), td:nth-child(15) { width: 6.36%; text-align: center; } /* 定價報酬率 */
+        th:nth-child(1), td:nth-child(1) { width: 30%; text-align: center; }
+        th:nth-child(n+2):nth-child(-n+15), td:nth-child(n+2):nth-child(-n+15) { width: 6.36%; text-align: center; }
 
         /* 修改商品名稱的樣式 */
         .product-name {
@@ -521,21 +445,11 @@
             padding: 0 4px;
         }
 
-        .product-name.selected {
-            color: #ff0000 !important; /* 添加 !important 確保選中狀態優先級 */
-        }
-
-        /* .product-name.viewing 類保留用於標記，但樣式由 tr.viewing 控制整行高亮 */
-
-        /* 整行高亮顯示 */
+        .product-name.selected { color: #ff0000 !important; }
         tr.viewing {
             background-color: rgba(0, 255, 204, 0.15) !important;
         }
-
-        /* 選中行移除邊框 */
-        tr.viewing td {
-            border: none !important;
-        }
+        tr.viewing td { border: none !important; }
 
         /* 添加复选框样式 */
         .product-checkbox {
@@ -567,11 +481,7 @@
             min-width: 70px;
             height: 28px;
         }
-
-        .confirm-delete-btn:hover {
-            background: rgba(255, 0, 0, 0.3);
-        }
-
+        .confirm-delete-btn:hover { background: rgba(255, 0, 0, 0.3); }
         .cancel-delete-btn {
             padding: 6px 12px;
             background: rgba(0, 255, 204, 0.1);
@@ -580,10 +490,7 @@
             min-width: 70px;
             height: 28px;
         }
-
-        .cancel-delete-btn:hover {
-            background: rgba(0, 255, 204, 0.2);
-        }
+        .cancel-delete-btn:hover { background: rgba(0, 255, 204, 0.2); }
 
         .delete-mode .product-checkbox {
             display: inline-block;
@@ -643,14 +550,12 @@
             box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
         }
 
-        /* 移除數字輸入框的上下箭頭 */
         .cell-edit-input[type="number"]::-webkit-inner-spin-button,
         .cell-edit-input[type="number"]::-webkit-outer-spin-button {
             -webkit-appearance: none;
             appearance: none;
             margin: 0;
         }
-
         .cell-edit-input[type="number"] {
             -moz-appearance: textfield;
             appearance: textfield;
@@ -855,15 +760,12 @@
             animation: fadeIn 0.2s ease;
         }
 
-        /* 隱藏密碼欄位的眼睛圖示（顯示/隱藏密碼按鈕） */
         input[type="password"]::-ms-reveal,
         input[type="password"]::-webkit-credentials-auto-fill-button,
         input[type="password"]::-webkit-input-decoration,
         input[type="password"]::-webkit-input-password-toggle-button {
             display: none !important;
         }
-
-
         /* 添加簡易模式相關樣式 */
         .simplified-view .full-view {
             display: none;
@@ -912,8 +814,6 @@
             width: auto !important;
             min-width: 30px !important;
         }
-
-        /* 確保簡易模式下的輸入框樣式不被覆蓋 */
         .simplified-view .right-settings input[type="number"] {
             width: auto !important;
             min-width: 45px !important;
@@ -930,201 +830,122 @@
             white-space: nowrap;
         }
 
-        /* 行動裝置表頭調整 */
+        /* 行動裝置響應式樣式 - 合併所有媒體查詢 */
         @media (max-width: 768px) {
+            body { padding: 10px 5px; }
+            .container {
+                padding: 8px;
+                border-radius: 8px;
+                max-width: 100%;
+                margin: 0;
+            }
+            .table-container {
+                max-height: calc(100vh - 220px);
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            table {
+                min-width: 1200px;
+                table-layout: auto;
+            }
             th {
                 font-size: 0.75em;
                 padding: 6px 3px;
                 white-space: nowrap;
             }
-        }
-
-        /* 行動裝置單元格調整 */
-        @media (max-width: 768px) {
             td {
                 font-size: 0.8em;
                 padding: 3px;
             }
-        }
-
-        /* 行動裝置列寬調整 */
-        @media (max-width: 768px) {
-            th:nth-child(1), td:nth-child(1) { width: 150px; min-width: 150px; } /* 商品名稱 */
-            th:nth-child(2), td:nth-child(2) { width: 80px; min-width: 80px; }   /* 採購價格 */
-            th:nth-child(3), td:nth-child(3) { width: 80px; min-width: 80px; }   /* 採購數量 */
-            th:nth-child(4), td:nth-child(4) { width: 80px; min-width: 80px; }   /* 內地運費 */
-            th:nth-child(5), td:nth-child(5) { width: 70px; min-width: 70px; }   /* 單重 */
-            th:nth-child(6), td:nth-child(6) { width: 70px; min-width: 70px; }   /* 總重 */
-            th:nth-child(7), td:nth-child(7) { width: 60px; min-width: 60px; }   /* 計材 */
-            th:nth-child(8), td:nth-child(8) { width: 90px; min-width: 90px; }   /* 單價成本 */
-            th:nth-child(9), td:nth-child(9) { width: 90px; min-width: 90px; }   /* 採購總成本 */
-            th:nth-child(10), td:nth-child(10) { width: 90px; min-width: 90px; } /* 建議定價 */
-            th:nth-child(11), td:nth-child(11) { width: 90px; min-width: 90px; } /* 實際定價 */
-            th:nth-child(12), td:nth-child(12) { width: 90px; min-width: 90px; } /* 定價損益 */
-            th:nth-child(13), td:nth-child(13) { width: 90px; min-width: 90px; } /* 定價總損益 */
-            th:nth-child(14), td:nth-child(14) { width: 90px; min-width: 90px; } /* 定價毛利率 */
-            th:nth-child(15), td:nth-child(15) { width: 90px; min-width: 90px; } /* 定價報酬率 */
-        }
-
-        /* 行動裝置按鈕區域調整 */
-        @media (max-width: 768px) {
+            th:nth-child(1), td:nth-child(1) { width: 150px; min-width: 150px; }
+            th:nth-child(2), td:nth-child(2) { width: 80px; min-width: 80px; }
+            th:nth-child(3), td:nth-child(3) { width: 80px; min-width: 80px; }
+            th:nth-child(4), td:nth-child(4) { width: 80px; min-width: 80px; }
+            th:nth-child(5), td:nth-child(5) { width: 70px; min-width: 70px; }
+            th:nth-child(6), td:nth-child(6) { width: 70px; min-width: 70px; }
+            th:nth-child(7), td:nth-child(7) { width: 60px; min-width: 60px; }
+            th:nth-child(8), td:nth-child(8) { width: 90px; min-width: 90px; }
+            th:nth-child(9), td:nth-child(9) { width: 90px; min-width: 90px; }
+            th:nth-child(10), td:nth-child(10) { width: 90px; min-width: 90px; }
+            th:nth-child(11), td:nth-child(11) { width: 90px; min-width: 90px; }
+            th:nth-child(12), td:nth-child(12) { width: 90px; min-width: 90px; }
+            th:nth-child(13), td:nth-child(13) { width: 90px; min-width: 90px; }
+            th:nth-child(14), td:nth-child(14) { width: 90px; min-width: 90px; }
+            th:nth-child(15), td:nth-child(15) { width: 90px; min-width: 90px; }
             .action-buttons {
                 flex-direction: column;
                 gap: 6px;
                 padding: 0;
             }
-
-            .action-buttons .left-buttons {
-                width: 100%;
-            }
-
+            .action-buttons .left-buttons { width: 100%; }
             .action-buttons .right-settings {
                 width: 100%;
                 justify-content: space-between;
             }
-
-            .action-buttons .right-settings .setting-item {
-                flex: 1;
-            }
-
+            .action-buttons .right-settings .setting-item { flex: 1; }
             .action-buttons .right-settings .setting-item input {
                 width: 100% !important;
                 min-width: unset !important;
                 max-width: unset !important;
             }
-
-            .batch-dropdown {
-                flex: 1;
-            }
-
-            #viewModeToggle {
-                width: 100%;
-            }
-        }
-
-        /* 行動裝置搜尋框調整 */
-        @media (max-width: 768px) {
+            .batch-dropdown { flex: 1; }
+            #viewModeToggle { width: 100%; }
             .search-box {
                 padding: 0;
                 margin-bottom: 8px;
             }
-
-            .search-box input {
-                font-size: 16px; /* 防止 iOS 自動縮放 */
-            }
-        }
-
-        /* 行動裝置分頁調整 */
-        @media (max-width: 768px) {
+            .search-box input { font-size: 16px; }
             .pagination {
                 gap: 4px;
                 margin-top: 8px;
                 flex-wrap: wrap;
             }
-
             .pagination button {
                 min-width: 28px;
                 height: 26px;
                 font-size: 0.8em;
                 padding: 2px 6px;
             }
-        }
-
-        /* 簡易模式行動裝置優化 */
-        @media (max-width: 768px) {
-            .simplified-view table {
-                min-width: 680px; /* 簡易模式下的最小寬度 */
-            }
-
-            .simplified-view th:nth-child(1), 
-            .simplified-view td:nth-child(1) { width: 120px; min-width: 120px; } /* 商品名稱 */
-            .simplified-view th:nth-child(2), 
-            .simplified-view td:nth-child(2) { width: 70px; min-width: 70px; }   /* 採購價格 */
-            .simplified-view th:nth-child(3), 
-            .simplified-view td:nth-child(3) { width: 80px; min-width: 80px; }   /* 採購數量 */
-            .simplified-view th:nth-child(4), 
-            .simplified-view td:nth-child(4) { width: 80px; min-width: 80px; }   /* 單價成本 */
-            .simplified-view th:nth-child(5), 
-            .simplified-view td:nth-child(5) { width: 80px; min-width: 80px; }   /* 採購總成本 */
-            .simplified-view th:nth-child(6), 
-            .simplified-view td:nth-child(6) { width: 80px; min-width: 80px; } /* 建議定價 */
-            .simplified-view th:nth-child(7), 
-            .simplified-view td:nth-child(7) { width: 80px; min-width: 80px; } /* 實際定價 */
-            .simplified-view th:nth-child(8), 
-            .simplified-view td:nth-child(8) { width: 80px; min-width: 80px; } /* 定價損益 */
-            .simplified-view th:nth-child(9), 
-            .simplified-view td:nth-child(9) { width: 90px; min-width: 90px; } /* 定價總損益 */
-        }
-
-        /* 行動裝置滾動條優化 */
-        @media (max-width: 768px) {
-            .table-container::-webkit-scrollbar {
-                height: 8px;
-            }
-
-            .table-container::-webkit-scrollbar-track {
-                background: rgba(0, 0, 0, 0.2);
-            }
-
+            .simplified-view table { min-width: 680px; }
+            .simplified-view th:nth-child(1), .simplified-view td:nth-child(1) { width: 120px; min-width: 120px; }
+            .simplified-view th:nth-child(2), .simplified-view td:nth-child(2) { width: 70px; min-width: 70px; }
+            .simplified-view th:nth-child(3), .simplified-view td:nth-child(3) { width: 80px; min-width: 80px; }
+            .simplified-view th:nth-child(4), .simplified-view td:nth-child(4) { width: 80px; min-width: 80px; }
+            .simplified-view th:nth-child(5), .simplified-view td:nth-child(5) { width: 80px; min-width: 80px; }
+            .simplified-view th:nth-child(6), .simplified-view td:nth-child(6) { width: 80px; min-width: 80px; }
+            .simplified-view th:nth-child(7), .simplified-view td:nth-child(7) { width: 80px; min-width: 80px; }
+            .simplified-view th:nth-child(8), .simplified-view td:nth-child(8) { width: 80px; min-width: 80px; }
+            .simplified-view th:nth-child(9), .simplified-view td:nth-child(9) { width: 90px; min-width: 90px; }
+            .table-container::-webkit-scrollbar { height: 8px; }
+            .table-container::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
             .table-container::-webkit-scrollbar-thumb {
                 background: rgba(0, 255, 204, 0.5);
                 border-radius: 4px;
             }
-        }
-
-        /* 行動裝置模態框調整 */
-        @media (max-width: 768px) {
             .modal-content {
                 width: 95%;
                 max-width: 95%;
                 margin: 10px;
                 padding: 12px;
             }
-
-            .error-modal-content,
-            .info-modal-content {
-                width: 90%;
-                padding: 15px;
-            }
-
-            .password-modal-content {
-                width: 85%;
-                max-width: 280px;
-            }
-        }
-
-        /* 行動裝置標題調整 */
-        @media (max-width: 768px) {
             h1 {
                 font-size: 1.5rem;
                 padding: 0.4rem 0.8rem;
                 letter-spacing: 1px;
             }
-
-            .title-container {
-                margin-bottom: 8px;
-            }
-        }
-
-        /* 行動裝置下拉選單調整 */
-        @media (max-width: 768px) {
+            .title-container { margin-bottom: 8px; }
             .batch-dropdown-content {
                 right: 0;
                 left: auto;
                 min-width: 150px;
             }
-
             .submenu {
                 right: auto;
                 left: 100%;
                 top: -5px;
             }
-        }
-
-        /* 行動裝置編輯輸入框調整 */
-        @media (max-width: 768px) {
             .cell-edit-input {
-                font-size: 16px; /* 防止 iOS 自動縮放 */
+                font-size: 16px;
                 padding: 6px;
             }
         }
@@ -1341,10 +1162,37 @@
             direction: 'asc'
         };
 
-        // 統一的選中狀態（用於兩次點擊邏輯）
-        // { type: 'product' | 'cell', index: number, field?: string }
         let selectedItem = null;
-        let highlightTimer = null; // 統一的計時器
+        let highlightTimer = null;
+        
+        // 清除高亮效果的輔助函數
+        function clearHighlight() {
+            if (highlightTimer) {
+                clearTimeout(highlightTimer);
+                highlightTimer = null;
+            }
+            if (!selectedItem) return;
+            
+            if (selectedItem.type === 'product') {
+                const row = $$(`tr:has(.product-name[data-index="${selectedItem.index}"])`);
+                const name = $$(`.product-name[data-index="${selectedItem.index}"]`);
+                if (row) row.classList.remove('viewing');
+                if (name) name.classList.remove('viewing');
+            } else if (selectedItem.type === 'cell') {
+                const cell = $$(`.editable-cell[data-index="${selectedItem.index}"][data-field="${selectedItem.field}"]`);
+                if (cell) {
+                    cell.classList.remove('viewing');
+                    const row = cell.closest('tr');
+                    if (row) row.classList.remove('viewing');
+                }
+            }
+        }
+        
+        // 清除選中狀態和計時器
+        function clearSelection() {
+            clearHighlight();
+            selectedItem = null;
+        }
 
         // 修改表格標題的 HTML
         function updateTableHeaders() {
@@ -1847,12 +1695,9 @@
         // 防抖函數
         function debounce(func, wait) {
             let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    func(...args);
-                };
+            return (...args) => {
                 clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
+                timeout = setTimeout(() => func(...args), wait);
             };
         }
 
@@ -1866,23 +1711,25 @@
                     if (returnData && returnData.index >= 0) {
                         const product = products[returnData.index];
                         if (product && product.id) {
-                            // 確保所有數值都是正確的格式
+                            const parseNum = (v, def = 0) => parseFloat(v) || def;
+                            const parseIntVal = (v, def = 0) => parseInt(v) || def;
+                            const p = returnData.product;
                             const updatedProduct = {
-                                ...returnData.product,
-                                purchasePrice: parseFloat(returnData.product.purchasePrice) || 0,
-                                quantity: parseInt(returnData.product.quantity) || 0,
-                                singleWeight: parseFloat(returnData.product.singleWeight) || 0,
-                                totalWeight: parseFloat(returnData.product.totalWeight) || 0,
-                                materialCount: parseInt(returnData.product.materialCount) || 0,
-                                inlandShipping: parseFloat(returnData.product.inlandShipping) || 0,
-                                internationalShipping: parseFloat(returnData.product.internationalShipping) || 0,
-                                exchangeRate: parseFloat(returnData.product.exchangeRate) || settings.exchangeRate,
-                                platformCommission: parseFloat(returnData.product.platformCommission) || settings.platformCommission,
-                                singleCost: parseFloat(returnData.product.singleCost) || 0,
-                                totalCost: parseFloat(returnData.product.totalCost) || 0,
-                                suggestedPrice: parseFloat(returnData.product.suggestedPrice) || 0,
-                                actualPrice: parseFloat(returnData.product.actualPrice) || 0,
-                                profitLoss: parseFloat(returnData.product.profitLoss) || 0
+                                ...p,
+                                purchasePrice: parseNum(p.purchasePrice),
+                                quantity: parseIntVal(p.quantity),
+                                singleWeight: parseNum(p.singleWeight),
+                                totalWeight: parseNum(p.totalWeight),
+                                materialCount: parseIntVal(p.materialCount),
+                                inlandShipping: parseNum(p.inlandShipping),
+                                internationalShipping: parseNum(p.internationalShipping),
+                                exchangeRate: parseNum(p.exchangeRate, settings.exchangeRate),
+                                platformCommission: parseNum(p.platformCommission, settings.platformCommission),
+                                singleCost: parseNum(p.singleCost),
+                                totalCost: parseNum(p.totalCost),
+                                suggestedPrice: parseNum(p.suggestedPrice),
+                                actualPrice: parseNum(p.actualPrice),
+                                profitLoss: parseNum(p.profitLoss)
                             };
 
                             // 更新現有商品
@@ -2054,76 +1901,40 @@
                     return;
                 }
 
-                // 清除之前選中項目的視覺效果
-                if (selectedItem !== null) {
-                    // 清除之前的計時器
-                    if (highlightTimer) {
-                        clearTimeout(highlightTimer);
-                        highlightTimer = null;
-                    }
-                    
-                    if (selectedItem.type === 'product') {
-                        const previousRow = $$(`tr:has(.product-name[data-index="${selectedItem.index}"])`);
-                        if (previousRow) {
-                            previousRow.classList.remove('viewing');
-                        }
-                        const previousProductName = $$(`.product-name[data-index="${selectedItem.index}"]`);
-                        if (previousProductName) {
-                            previousProductName.classList.remove('viewing');
-                        }
-                    } else if (selectedItem.type === 'cell') {
-                        const previousCell = $$(`.editable-cell[data-index="${selectedItem.index}"][data-field="${selectedItem.field}"]`);
-                        if (previousCell) {
-                            previousCell.classList.remove('viewing');
-                            const previousRow = previousCell.closest('tr');
-                            if (previousRow) {
-                                previousRow.classList.remove('viewing');
-                            }
-                        }
-                    }
-                }
+                if (selectedItem !== null) clearHighlight();
 
                 // 檢查是否點擊的是已選中的商品
                 const isSelected = selectedItem && selectedItem.type === 'product' && selectedItem.index === index;
                 
-                // 如果點擊的是已選中的商品，則進入編輯模式（跳轉到 index.html）
                 if (isSelected) {
-                    // 清除選中狀態和計時器
-                    selectedItem = null;
-                    if (highlightTimer) {
-                        clearTimeout(highlightTimer);
-                        highlightTimer = null;
-                    }
-                    const currentRow = $$(`tr:has(.product-name[data-index="${index}"])`);
-                    if (currentRow) {
-                        currentRow.classList.remove('viewing');
-                    }
-                    const productName = $$(`.product-name[data-index="${index}"]`);
-                    if (productName) {
-                        productName.classList.remove('viewing');
-                    }
+                    clearSelection();
+                    const row = $$(`tr:has(.product-name[data-index="${index}"])`);
+                    const name = $$(`.product-name[data-index="${index}"]`);
+                    if (row) row.classList.remove('viewing');
+                    if (name) name.classList.remove('viewing');
 
-                    // 確保所有數值都是正確的格式
+                    const parseNum = (v, def = 0) => parseFloat(v) || def;
+                    const parseIntVal = (v, def = 0) => parseInt(v) || def;
                     const formattedProduct = {
                         id: product.id,
                         name: product.name || '',
                         currency: product.currency || 'CNY',
-                        purchasePrice: parseFloat(product.purchasePrice) || 0,
-                        quantity: parseInt(product.quantity) || 0,
-                        singleWeight: parseFloat(product.singleWeight) || 0,
-                        totalWeight: parseFloat(product.totalWeight) || 0,
-                        materialCount: parseInt(product.materialCount) || 0,
-                        inlandShipping: (parseFloat(product.inlandShipping) || 0) === 0 ? '無' : parseFloat(product.inlandShipping),
-                        internationalShipping: parseFloat(product.internationalShipping) || 0,
-                        exchangeRate: parseFloat(product.exchangeRate) || settings.exchangeRate,
-                        platformCommission: parseFloat(product.platformCommission) || settings.platformCommission,
-                        singleCost: parseFloat(product.singleCost) || 0,
-                        totalCost: parseFloat(product.totalCost) || 0,
-                        suggestedPrice: parseFloat(product.suggestedPrice) || 0,
-                        actualPrice: parseFloat(product.actualPrice) || 0,
-                        profitLoss: parseFloat(product.profitLoss) || 0,
+                        purchasePrice: parseNum(product.purchasePrice),
+                        quantity: parseIntVal(product.quantity),
+                        singleWeight: parseNum(product.singleWeight),
+                        totalWeight: parseNum(product.totalWeight),
+                        materialCount: parseIntVal(product.materialCount),
+                        inlandShipping: parseNum(product.inlandShipping) === 0 ? '無' : parseNum(product.inlandShipping),
+                        internationalShipping: parseNum(product.internationalShipping),
+                        exchangeRate: parseNum(product.exchangeRate, settings.exchangeRate),
+                        platformCommission: parseNum(product.platformCommission, settings.platformCommission),
+                        singleCost: parseNum(product.singleCost),
+                        totalCost: parseNum(product.totalCost),
+                        suggestedPrice: parseNum(product.suggestedPrice),
+                        actualPrice: parseNum(product.actualPrice),
+                        profitLoss: parseNum(product.profitLoss),
                         timestamp: product.timestamp,
-                        isEditMode: true  // 添加編輯模式標記
+                        isEditMode: true
                     };
 
                     // 直接使用 JSON.stringify，不需要額外的編碼
@@ -2134,37 +1945,21 @@
                     });
                     window.location.href = `index.html?${params.toString()}`;
                 } else {
-                    // 第一次點擊：選擇商品並高亮顯示整行
                     selectedItem = { type: 'product', index: index };
-                    
-                    // 清除之前的計時器
-                    if (highlightTimer) {
-                        clearTimeout(highlightTimer);
-                        highlightTimer = null;
+                    clearHighlight();
+                    const name = $$(`.product-name[data-index="${index}"]`);
+                    if (name) {
+                        const row = name.closest('tr');
+                        if (row) row.classList.add('viewing');
+                        name.classList.add('viewing');
                     }
-                    
-                    const productName = $$(`.product-name[data-index="${index}"]`);
-                    if (productName) {
-                        const currentRow = productName.closest('tr');
-                        if (currentRow) {
-                            currentRow.classList.add('viewing');
-                        }
-                        productName.classList.add('viewing');
-                    }
-                    
-                    // 設置 5 秒後自動清除高亮
                     highlightTimer = setTimeout(() => {
-                        selectedItem = null;
-                        const currentRow = $$(`tr:has(.product-name[data-index="${index}"])`);
-                        if (currentRow) {
-                            currentRow.classList.remove('viewing');
-                        }
-                        const nameElement = $$(`.product-name[data-index="${index}"]`);
-                        if (nameElement) {
-                            nameElement.classList.remove('viewing');
-                        }
-                        highlightTimer = null;
-                    }, 5000); // 5 秒
+                        clearSelection();
+                        const row = $$(`tr:has(.product-name[data-index="${index}"])`);
+                        const nameEl = $$(`.product-name[data-index="${index}"]`);
+                        if (row) row.classList.remove('viewing');
+                        if (nameEl) nameEl.classList.remove('viewing');
+                    }, 5000);
                 }
             }
         }
@@ -2688,49 +2483,13 @@
                 // 檢查是否點擊的是已選中的欄位
                 const isSelected = selectedItem && selectedItem.type === 'cell' && selectedItem.index === index && selectedItem.field === field;
                 
-                // 清除之前選中項目的高亮
-                if (selectedItem !== null && !isSelected) {
-                    // 清除之前的計時器
-                    if (highlightTimer) {
-                        clearTimeout(highlightTimer);
-                        highlightTimer = null;
-                    }
-                    
-                    if (selectedItem.type === 'product') {
-                        const previousRow = $$(`tr:has(.product-name[data-index="${selectedItem.index}"])`);
-                        if (previousRow) {
-                            previousRow.classList.remove('viewing');
-                        }
-                        const previousProductName = $$(`.product-name[data-index="${selectedItem.index}"]`);
-                        if (previousProductName) {
-                            previousProductName.classList.remove('viewing');
-                        }
-                    } else if (selectedItem.type === 'cell') {
-                        const previousCell = $$(`.editable-cell[data-index="${selectedItem.index}"][data-field="${selectedItem.field}"]`);
-                        if (previousCell) {
-                            previousCell.classList.remove('viewing');
-                            const previousRow = previousCell.closest('tr');
-                            if (previousRow) {
-                                previousRow.classList.remove('viewing');
-                            }
-                        }
-                    }
-                }
+                if (selectedItem !== null && !isSelected) clearHighlight();
                 
-                // 如果點擊的是已選中的欄位，則進入編輯模式（原地編輯）
                 if (isSelected) {
-                    // 清除選中狀態和計時器
-                    selectedItem = null;
-                    if (highlightTimer) {
-                        clearTimeout(highlightTimer);
-                        highlightTimer = null;
-                    }
+                    clearSelection();
                     cell.classList.remove('viewing');
-                    // 清除整行高亮
                     const row = cell.closest('tr');
-                    if (row) {
-                        row.classList.remove('viewing');
-                    }
+                    if (row) row.classList.remove('viewing');
                     
                     // 创建输入框
                     const input = document.createElement('input');
@@ -2738,11 +2497,10 @@
                     input.value = '';  // 點擊時清空，與匯率輸入框一致
                     input.className = 'cell-edit-input';
                     
-                    // 根据字段类型设置输入类型
-                    if (['purchasePrice', 'singleWeight', 'totalWeight', 'inlandShipping', 
-                         'internationalShipping', 'exchangeRate', 'platformCommission', 
-                         'singleCost', 'totalCost', 'suggestedPrice', 'actualPrice', 
-                         'profitLoss'].includes(field)) {
+                    const decimalFields = ['purchasePrice', 'singleWeight', 'totalWeight', 'inlandShipping', 
+                        'internationalShipping', 'exchangeRate', 'platformCommission', 
+                        'singleCost', 'totalCost', 'suggestedPrice', 'actualPrice', 'profitLoss'];
+                    if (decimalFields.includes(field)) {
                         input.type = 'number';
                         input.step = '0.01';
                     } else if (field === 'quantity' || field === 'materialCount') {
@@ -3022,35 +2780,20 @@
                         }
                     });
                 } else {
-                    // 第一次點擊：高亮顯示該欄位和整行
                     selectedItem = { type: 'cell', index: index, field: field };
-                    
-                    // 清除之前的計時器
-                    if (highlightTimer) {
-                        clearTimeout(highlightTimer);
-                        highlightTimer = null;
-                    }
-                    
+                    clearHighlight();
                     cell.classList.add('viewing');
-                    // 高亮整行
                     const row = cell.closest('tr');
-                    if (row) {
-                        row.classList.add('viewing');
-                    }
-                    
-                    // 設置 5 秒後自動清除高亮
+                    if (row) row.classList.add('viewing');
                     highlightTimer = setTimeout(() => {
-                        selectedItem = null;
-                        const currentCell = $$(`.editable-cell[data-index="${index}"][data-field="${field}"]`);
-                        if (currentCell) {
-                            currentCell.classList.remove('viewing');
-                            const currentRow = currentCell.closest('tr');
-                            if (currentRow) {
-                                currentRow.classList.remove('viewing');
-                            }
+                        clearSelection();
+                        const cellEl = $$(`.editable-cell[data-index="${index}"][data-field="${field}"]`);
+                        if (cellEl) {
+                            cellEl.classList.remove('viewing');
+                            const rowEl = cellEl.closest('tr');
+                            if (rowEl) rowEl.classList.remove('viewing');
                         }
-                        highlightTimer = null;
-                    }, 5000); // 5 秒
+                    }, 5000);
                 }
             });
             
@@ -3749,7 +3492,6 @@
             }
         }
 
-        // 添加錯誤視窗相關函數
         function showErrorModal(message) {
             const modal = $('errorModal');
             const modalBody = $('errorModalBody');
@@ -3758,7 +3500,6 @@
             modal.classList.add('show');
         }
 
-        // 匯出空白範本
         async function exportBlankTemplate() {
             try {
                 // 創建空白範本數據
@@ -3804,12 +3545,9 @@
             }
         }
 
-        // 添加清除資料功能
         async function clearAllData() {
             showPasswordModal();
         }
-
-        // 顯示密碼驗證視窗
         function showPasswordModal() {
             const modal = $('passwordModal');
             const passwordInput = $('passwordInput');
@@ -3819,14 +3557,10 @@
             passwordInput.focus();
         }
 
-        // 關閉密碼驗證視窗
         function closePasswordModal() {
-            const modal = $('passwordModal');
-            if (!modal) return;
-            modal.classList.remove('show');
+            closeModal('passwordModal');
         }
 
-        // 驗證密碼
         async function verifyPassword() {
             const passwordInput = $('passwordInput');
             if (!passwordInput) return;
@@ -3842,21 +3576,16 @@
             }
         }
 
-        // 顯示最終確認刪除視窗
         function showFinalDeleteConfirmModal() {
             const modal = $('finalDeleteConfirmModal');
             if (!modal) return;
             modal.classList.add('show');
         }
 
-        // 關閉最終確認刪除視窗
         function closeFinalDeleteConfirmModal() {
-            const modal = $('finalDeleteConfirmModal');
-            if (!modal) return;
-            modal.classList.remove('show');
+            closeModal('finalDeleteConfirmModal');
         }
 
-        // 執行實際的全部刪除操作
         async function executeDeleteAll() {
             try {
                 // 獲取所有商品文檔
@@ -3893,20 +3622,12 @@
             }
         }
 
-        // 添加密碼輸入框的鍵盤事件（只保留Enter確認功能）
         const passwordInput = $('passwordInput');
         if (passwordInput) {
             passwordInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    verifyPassword();
-                }
-                // 不允許ESC關閉，只能通過按鈕關閉
+                if (e.key === 'Enter') verifyPassword();
             });
         }
-
-        // 所有模態視窗都不允許點擊外部關閉
-
-        // 新增 info modal 相關函數
         function showInfoModal(message, autoClose = false, autoCloseDelay = 3000) {
             const modal = $('infoModal');
             const modalBody = $('infoModalBody');
@@ -3922,12 +3643,8 @@
             }
         }
         function closeInfoModal() {
-            const modal = $('infoModal');
-            if (!modal) return;
-            modal.classList.remove('show');
+            closeModal('infoModal');
         }
-
-        // 統一關閉 modal 函數
         function closeModal(id) {
             const modal = $(id);
             if (!modal) return;
